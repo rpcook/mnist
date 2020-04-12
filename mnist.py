@@ -49,11 +49,3 @@ class database:
         if imgSet == 'test':
             return self.__testImages[idx], self.__testLabels[idx]
         raise NameError('Unexpected Image Set type (not \'training\' or \'test\')')
-
-# debugging helper:
-if __name__ == '__main__':
-    a = database()
-    a.loadData()
-    img, lbl = a.getData(range(3,8),'test')
-    print(img.shape)
-    print(lbl)
