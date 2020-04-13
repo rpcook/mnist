@@ -8,17 +8,19 @@ import numpy as np
 from struct import unpack
 
 class database:
-    def __init__(self): # defines empty class
+    def __init__(self, loadTestOnly=False): # defines empty class
         self.__trainingImages = []
         self.__trainingLabels = []
         self.__testImages = []
         self.__testLabels = []
+        self.__loadData(loadTestOnly)
     
-    def loadData(self): # loads the mnist database from file
-        with open('train-images.idx3-ubyte', 'rb') as f:
-            self.__trainingImages = self.__parseImageFile(f)
-        with open('train-labels.idx1-ubyte', 'rb') as f:
-            self.__trainingLabels = self.__parseLabelFile(f)
+    def __loadData(self, loadTestOnly): # loads the mnist database from file
+        if loadTestOnly==False:
+            with open('train-images.idx3-ubyte', 'rb') as f:
+                self.__trainingImages = self.__parseImageFile(f)
+            with open('train-labels.idx1-ubyte', 'rb') as f:
+                self.__trainingLabels = self.__parseLabelFile(f)
         with open('t10k-images.idx3-ubyte', 'rb') as f:
             self.__testImages = self.__parseImageFile(f)
         with open('t10k-labels.idx1-ubyte', 'rb') as f:
