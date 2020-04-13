@@ -6,8 +6,11 @@ Created on Sun Apr 12 16:23:33 2020
 """
 
 import tkinter as tk
+from tkinter import filedialog
 import math
 import mnist
+import nn
+from struct import unpack
 
 mnistTestData = mnist.database(loadTestOnly=True)
 
@@ -16,6 +19,7 @@ class testingGUI:
         self.master = master
         master.title('MNIST Neural Network Test Interface')
         
+        # drawing canvas area
         pxSize = 15
         self.pixelSize = pxSize
         self.drawingCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28, bg='#000044')
@@ -23,31 +27,93 @@ class testingGUI:
         self.drawingCanvas.bind('<B1-Motion>', self.__paintOnCanvas)
         self.__addDrawingBackground()
         
-        self.pixelCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28, bg='#440000')
-        self.pixelCanvas.grid(row=0, column=1)
-        
         self.processDrawingButton = tk.Button(text='Process Digit', command=self.__procDrawing)
         self.processDrawingButton.grid(row=2)
         
         self.clearButton = tk.Button(text='Clear', command=self.__clearDrawingCanvas)
         self.clearButton.grid(row=1)
         
+        # pixel canvas area
+        self.pixelCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28, bg='#440000')
+        self.pixelCanvas.grid(row=0, column=1)
+        
         self.testIndex = tk.Spinbox(from_=0, to=9999, command=self.__loadMNIST)
         self.testIndex.grid(row=1,column=1)
+        self.testIndex.bind('<Return>', self.__loadMNIST)
         
         self.mnistLabelVar = tk.StringVar()
         self.mnistLabelVar.set('Label: #')
         self.mnistLabel = tk.Label(textvariable=self.mnistLabelVar)
         self.mnistLabel.grid(row=2,column=1)
         
-        self.loadButton = tk.Button(text='Load MNIST test data', command=self.__loadMNIST)
-        self.loadButton.grid(row=3,column=1)
+        # neural network area
+        # TODO: add canvas, load button, (process button?), output digit
+        self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
+        self.nnProcessButton.grid(row=0, column=2)
+        
+        self.nnCanvas = tk.Canvas(width=pxSize*30, height=pxSize*28)
+        self.nnCanvas.grid(row=0,column=3)
+        
+        self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
+        self.loadNNbutton.grid(row=1,column=3)
+        
+        # TODO: load network structure from file (dialog)
+        # TODO: graphics of network structure
+        # TODO: graphics of network activity (pending actually how to evaluate that...)
+        
+        self.network = nn.network()
+        
+    def __loadNetwork(self):
+        ##### following four lines commented during debug to save mouseclicks
+        # file = filedialog.askopenfile(title='Select neural network', filetypes=(("neural network files","*.nn"),))
+        # if file is None:
+        #     return
+        #with open(file.name, 'rb') as f:
+        with open('randomNetwork.nn', 'rb') as f:
+            nLayers = unpack('B', f.read(1))[0]
+            neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
+        if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
+            return
+        self.network.setStructure(neuronsPerLayer)
+        self.__drawNetwork()
+    
+    def __drawNetwork(self):
+        self.nnCanvas.delete('all')
+        layersToDraw = self.network.getStructure()[1:]
+        neuronSpacingX = round((25*self.pixelSize) / (len(layersToDraw) + 1))
+        neuronRadius = round(round((28*self.pixelSize) / (max(layersToDraw) + 1)) / 4)
+        for a in range(len(layersToDraw)):
+            neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
+            for b in range(layersToDraw[a]):
+                if a>0:
+                    lastSpacingY = round((28*self.pixelSize) / (layersToDraw[a-1] + 1))
+                    for c in range(layersToDraw[a-1]):
+                        self.nnCanvas.create_line(
+                            (a+1)*neuronSpacingX,
+                            (b+1)*neuronSpacingY,
+                            (a+0)*neuronSpacingX,
+                            (c+1)*lastSpacingY,
+                            fill='#CCCCCC')
+        for a in range(len(layersToDraw)):
+            neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
+            for b in range(layersToDraw[a]):
+                self.nnCanvas.create_oval(
+                    (a+1)*neuronSpacingX-neuronRadius, 
+                    (b+1)*neuronSpacingY-neuronRadius, 
+                    (a+1)*neuronSpacingX+neuronRadius, 
+                    (b+1)*neuronSpacingY+neuronRadius,
+                    fill='#000000')
+        
+    def __processNetwork(self):
+        pass
 
-    def __loadMNIST(self):
+    def __loadMNIST(self, *args):
         try:
             testIndex = int(self.testIndex.get())
         except:
             self.testIndex.delete(0, tk.END)
+            return
+        if testIndex < 0 or testIndex > 9999:
             return
         mnistDigit, mnistLabel = mnistTestData.getData(testIndex, 'test')
         self.mnistLabelVar.set('Label: {}'.format(mnistLabel))
