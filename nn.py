@@ -14,3 +14,13 @@ def sigmoid(x):
 def dsigmoid(x):
     # first derivative of logistic function
     return sigmoid(x)*sigmoid(-x)
+
+class network:
+    def __init__(self):
+        self.__neuronsPerLayer = []
+    
+    def setStructure(self, structure):
+        self.__neuronsPerLayer = structure
+        
+    def getStructure(self):
+        return self.__neuronsPerLayer
