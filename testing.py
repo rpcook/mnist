@@ -25,6 +25,7 @@ class testingGUI:
         self.drawingCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28, bg='#000044')
         self.drawingCanvas.grid(row=0, column=0)
         self.drawingCanvas.bind('<B1-Motion>', self.__paintOnCanvas)
+        self.drawingCanvas.bind('<Button-1>', self.__paintOnCanvas)
         self.__addDrawingBackground()
         
         self.processDrawingButton = tk.Button(text='Process Digit', command=self.__procDrawing)
@@ -53,6 +54,7 @@ class testingGUI:
         
         self.nnCanvas = tk.Canvas(width=pxSize*30, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=3)
+        self.nnCanvas.bind('<Button-1>', self.__highlightNode)
         
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
         self.loadNNbutton.grid(row=1,column=3)
@@ -83,17 +85,19 @@ class testingGUI:
         neuronSpacingX = round((25*self.pixelSize) / (len(layersToDraw) + 1))
         neuronRadius = round(round((28*self.pixelSize) / (max(layersToDraw) + 1)) / 4)
         for a in range(len(layersToDraw)):
+            if a==0:
+                continue
             neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
             for b in range(layersToDraw[a]):
-                if a>0:
-                    lastSpacingY = round((28*self.pixelSize) / (layersToDraw[a-1] + 1))
-                    for c in range(layersToDraw[a-1]):
-                        self.nnCanvas.create_line(
-                            (a+1)*neuronSpacingX,
-                            (b+1)*neuronSpacingY,
-                            (a+0)*neuronSpacingX,
-                            (c+1)*lastSpacingY,
-                            fill='#CCCCCC')
+                lastSpacingY = round((28*self.pixelSize) / (layersToDraw[a-1] + 1))
+                for c in range(layersToDraw[a-1]):
+                    self.nnCanvas.create_line(
+                        (a+1)*neuronSpacingX,
+                        (b+1)*neuronSpacingY,
+                        (a+0)*neuronSpacingX,
+                        (c+1)*lastSpacingY,
+                        fill='#CCCCCC',
+                        tags='connection')
         for a in range(len(layersToDraw)):
             neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
             for b in range(layersToDraw[a]):
@@ -102,8 +106,24 @@ class testingGUI:
                     (b+1)*neuronSpacingY-neuronRadius, 
                     (a+1)*neuronSpacingX+neuronRadius, 
                     (b+1)*neuronSpacingY+neuronRadius,
-                    fill='#000000')
-        
+                    fill='#000000',
+                    tags='neuron')
+    
+    def __highlightNode(self, event):
+        clickedElement = event.widget.find_closest(event.x, event.y)
+        if len(clickedElement)==1:
+            if self.nnCanvas.itemcget(clickedElement[0], 'tags')!='highlight current':
+                self.nnCanvas.delete('highlight')
+            if self.nnCanvas.itemcget(clickedElement[0], 'tags')=='neuron current':
+                neuronCoords = self.nnCanvas.coords(clickedElement[0])
+                self.nnCanvas.create_oval(
+                    neuronCoords[0],
+                    neuronCoords[1],
+                    neuronCoords[2],
+                    neuronCoords[3],
+                    fill='#FF0000',
+                    tags='highlight')
+    
     def __processNetwork(self):
         pass
 
