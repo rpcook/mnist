@@ -87,9 +87,9 @@ class testingGUI:
         for a in range(len(layersToDraw)):
             if a==0:
                 continue
-            neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
+            neuronSpacingY = (28*self.pixelSize) / (layersToDraw[a] + 1)
             for b in range(layersToDraw[a]):
-                lastSpacingY = round((28*self.pixelSize) / (layersToDraw[a-1] + 1))
+                lastSpacingY = (28*self.pixelSize) / (layersToDraw[a-1] + 1)
                 for c in range(layersToDraw[a-1]):
                     self.nnCanvas.create_line(
                         (a+1)*neuronSpacingX,
@@ -99,7 +99,7 @@ class testingGUI:
                         fill='#CCCCCC',
                         tags='connection')
         for a in range(len(layersToDraw)):
-            neuronSpacingY = round((28*self.pixelSize) / (layersToDraw[a] + 1))
+            neuronSpacingY = (28*self.pixelSize) / (layersToDraw[a] + 1)
             for b in range(layersToDraw[a]):
                 self.nnCanvas.create_oval(
                     (a+1)*neuronSpacingX-neuronRadius, 
@@ -107,15 +107,27 @@ class testingGUI:
                     (a+1)*neuronSpacingX+neuronRadius, 
                     (b+1)*neuronSpacingY+neuronRadius,
                     fill='#000000',
-                    tags='neuron')
+                    tags=('neuron', 'L{}'.format(a+1), 'N{}'.format(b)))
     
     def __highlightNode(self, event):
         clickedElement = event.widget.find_closest(event.x, event.y)
+        clickedTags = self.nnCanvas.itemcget(clickedElement[0], 'tags')
         if len(clickedElement)==1:
-            if self.nnCanvas.itemcget(clickedElement[0], 'tags')!='highlight current':
+            if not ('highlight' in clickedTags and 'current' in clickedTags):
                 self.nnCanvas.delete('highlight')
-            if self.nnCanvas.itemcget(clickedElement[0], 'tags')=='neuron current':
+            if 'neuron' in clickedTags and 'current' in clickedTags:
                 neuronCoords = self.nnCanvas.coords(clickedElement[0])
+                layer = int(clickedTags[clickedTags.find('L')+1:clickedTags.find(' ',clickedTags.find('L'))])
+                neuron = int(clickedTags[clickedTags.find('N')+1:clickedTags.find(' ',clickedTags.find('N'))])
+                neuronSpacingY = (28*self.pixelSize) / (self.network.getStructure()[layer-1] + 1)
+                for a in range(self.network.getStructure()[layer-1]):
+                    self.nnCanvas.create_line(
+                        (neuronCoords[0]+neuronCoords[2])/2,
+                        (neuronCoords[1]+neuronCoords[3])/2,
+                        ((layer-1)/layer)*((neuronCoords[0]+neuronCoords[2])/2),
+                        (a+1)*neuronSpacingY,
+                        fill='#FF0000',
+                        tags='highlight')
                 self.nnCanvas.create_oval(
                     neuronCoords[0],
                     neuronCoords[1],
