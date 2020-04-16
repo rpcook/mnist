@@ -7,6 +7,7 @@ Created on Sun Apr 12 16:23:33 2020
 
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 import math
 import mnist
 import nn
@@ -67,7 +68,6 @@ class testingGUI:
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
         self.loadNNbutton.grid(row=1,column=2)
         
-        # TODO: graphics of network structure
         # TODO: graphics of network activity (pending actually how to evaluate that...)
         
         self.network = nn.network()
@@ -82,6 +82,7 @@ class testingGUI:
             nLayers = unpack('B', f.read(1))[0]
             neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
         if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
+            messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
             return
         self.network = nn.network()
         self.network.setStructure(neuronsPerLayer)
@@ -164,7 +165,9 @@ class testingGUI:
         return '#'+hexValue*3
     
     def __processNetwork(self):
-        # TODO: remove next two lines of debug
+        if self.network.getStructure() == []:
+            return
+        # TODO: remove next two lines of debug (randomise network contents)
         for i in range(len(self.network.getStructure())):
             self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i]))
         self.__drawNetwork()
