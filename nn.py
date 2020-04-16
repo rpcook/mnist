@@ -18,9 +18,19 @@ def dsigmoid(x):
 class network:
     def __init__(self):
         self.__neuronsPerLayer = []
+        self.__neuronActivations = []
     
     def setStructure(self, structure):
         self.__neuronsPerLayer = structure
+        self.__neuronActivation = []
+        for layerSize in structure:
+            self.__neuronActivations.append(np.zeros(layerSize))
         
     def getStructure(self):
         return self.__neuronsPerLayer
+    
+    def setNeuronActivation(self, layer, neuron, activation):
+        self.__neuronActivations[layer][neuron] = activation
+    
+    def getNeuronActivation(self, layer, neuron):
+        return self.__neuronActivations[layer][neuron]
