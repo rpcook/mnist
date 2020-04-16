@@ -12,6 +12,14 @@ import mnist
 import nn
 from struct import unpack
 
+# TODO: remove this debug function
+from random import random
+def randomArray(size):
+    x=[]
+    for i in range(size):
+        x.append(random())
+    return x
+
 mnistTestData = mnist.database(loadTestOnly=True)
 
 class testingGUI:
@@ -48,7 +56,7 @@ class testingGUI:
         self.mnistLabel.grid(row=2,column=1)
         
         # neural network area
-        # TODO: add canvas, load button, (process button?), output digit
+        # TODO: add output digit * last layer activations
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
         self.nnProcessButton.grid(row=2, column=2)
         
@@ -59,7 +67,6 @@ class testingGUI:
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
         self.loadNNbutton.grid(row=1,column=2)
         
-        # TODO: load network structure from file (dialog)
         # TODO: graphics of network structure
         # TODO: graphics of network activity (pending actually how to evaluate that...)
         
@@ -76,6 +83,7 @@ class testingGUI:
             neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
         if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
             return
+        self.network = nn.network()
         self.network.setStructure(neuronsPerLayer)
         self.__drawNetwork()
     
@@ -99,7 +107,7 @@ class testingGUI:
                         (b+1)*neuronSpacingY,
                         (a+0)*neuronSpacingX,
                         (c+1)*lastSpacingY,
-                        fill='#CCCCCC',
+                        fill='#AAAAAA',
                         tags='connection')
         layersToDraw = self.network.getStructure()[1:]
         for a in range(len(layersToDraw)):
@@ -110,7 +118,7 @@ class testingGUI:
                     (b+1)*neuronSpacingY-neuronRadius, 
                     (a+1)*neuronSpacingX+neuronRadius, 
                     (b+1)*neuronSpacingY+neuronRadius,
-                    fill='#000000',
+                    fill=self.__getNeuronColour(a+1, b),
                     tags=('neuron', 'L{}'.format(a+1), 'N{}'.format(b)))
     
     def __highlightNode(self, event):
@@ -139,18 +147,27 @@ class testingGUI:
                             (a+1)*neuronSpacingY-(neuronCoords[2]-neuronCoords[0])/2,
                             neuronCoords[2]-xDiffBetweenLayers,
                             (a+1)*neuronSpacingY+(neuronCoords[2]-neuronCoords[0])/2,
-                            fill='#00FFFF',
+                            fill=self.__getNeuronColour(layer-1, a),
                             tags=('highlight', 'neuron', 'L{}'.format(layer-1), 'N{}'.format(a)))
                 self.nnCanvas.create_oval(
                     neuronCoords[0],
                     neuronCoords[1],
                     neuronCoords[2],
                     neuronCoords[3],
-                    fill='#FF0000',
+                    fill=self.__getNeuronColour(layer, neuron),
                     tags='highlight')
     
+    def __getNeuronColour(self, layer, neuron):
+        activation = self.network.getNeuronActivation(layer, neuron)
+        brightness = int(round(255*activation))
+        hexValue = '%0.2X' % brightness
+        return '#'+hexValue*3
+    
     def __processNetwork(self):
-        pass
+        # TODO: remove next two lines of debug
+        for i in range(len(self.network.getStructure())):
+            self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i]))
+        self.__drawNetwork()
 
     def __loadMNIST(self, *args):
         try:
