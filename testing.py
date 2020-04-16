@@ -57,11 +57,11 @@ class testingGUI:
         self.mnistLabel.grid(row=2,column=1)
         
         # neural network area
-        # TODO: add output digit * last layer activations
+        # TODO: add output digit
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
         self.nnProcessButton.grid(row=2, column=2)
         
-        self.nnCanvas = tk.Canvas(width=pxSize*30, height=pxSize*28)
+        self.nnCanvas = tk.Canvas(width=pxSize*27, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=2)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
         
@@ -111,6 +111,7 @@ class testingGUI:
                         fill='#AAAAAA',
                         tags='connection')
         layersToDraw = self.network.getStructure()[1:]
+        maxActivation = 0
         for a in range(len(layersToDraw)):
             neuronSpacingY = (28*self.pixelSize) / (layersToDraw[a] + 1)
             for b in range(layersToDraw[a]):
@@ -121,6 +122,25 @@ class testingGUI:
                     (b+1)*neuronSpacingY+neuronRadius,
                     fill=self.__getNeuronColour(a+1, b),
                     tags=('neuron', 'L{}'.format(a+1), 'N{}'.format(b)))
+                if a == len(layersToDraw)-1:
+                    self.nnCanvas.create_rectangle(
+                        (a+1)*neuronSpacingX+2*neuronRadius-1, 
+                        (b+1)*neuronSpacingY-neuronRadius-1, 
+                        (a+2)*neuronSpacingX+2*neuronRadius+1, 
+                        (b+1)*neuronSpacingY+neuronRadius+1)
+                    activation = self.network.getNeuronActivation(a+1, b)
+                    rect = self.nnCanvas.create_rectangle(
+                        (a+1)*neuronSpacingX+2*neuronRadius, 
+                        (b+1)*neuronSpacingY-neuronRadius, 
+                        (a+1+activation)*neuronSpacingX+2*neuronRadius+1, 
+                        (b+1)*neuronSpacingY+neuronRadius+1,
+                        fill='#FF0000',
+                        width=0)
+                    if activation > maxActivation:
+                        maxActivation = activation
+                        maxRect = rect
+            if maxActivation != 0:
+                self.nnCanvas.itemconfig(maxRect, fill='#00FF00')
     
     def __highlightNode(self, event):
         clickedElement = event.widget.find_closest(event.x, event.y)
