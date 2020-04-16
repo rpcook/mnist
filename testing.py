@@ -15,10 +15,10 @@ from struct import unpack
 
 # TODO: remove this debug function
 from random import random
-def randomArray(size):
+def randomArray(size, multiplier):
     x=[]
     for i in range(size):
-        x.append(random())
+        x.append(1-multiplier*random())
     return x
 
 mnistTestData = mnist.database(loadTestOnly=True)
@@ -156,7 +156,19 @@ class testingGUI:
                     neuronCoords[2],
                     neuronCoords[3],
                     fill=self.__getNeuronColour(layer, neuron),
+                    outline=self.__getNeuronBiasColour(layer, neuron),
+                    width=(neuronCoords[2]-neuronCoords[0])/3,
                     tags='highlight')
+    
+    def __getNeuronBiasColour(self, layer, neuron):
+        bias = self.network.getNeuronBias(layer, neuron)
+        maxBrightness = 1.0
+        brightness = int(round(255*bias/maxBrightness))
+        hexValue = '%0.2X' % abs(brightness)
+        if bias > 0:
+            return '#00'+hexValue+'00'
+        else:
+            return '#'+hexValue+'0000'
     
     def __getNeuronColour(self, layer, neuron):
         activation = self.network.getNeuronActivation(layer, neuron)
@@ -169,7 +181,8 @@ class testingGUI:
             return
         # TODO: remove next two lines of debug (randomise network contents)
         for i in range(len(self.network.getStructure())):
-            self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i]))
+            self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 1))
+            self.network.setNeuronBias(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 2))
         self.__drawNetwork()
 
     def __loadMNIST(self, *args):
