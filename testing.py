@@ -88,11 +88,10 @@ class testingGUI:
             self.network = nn.network()
             self.network.setStructure(neuronsPerLayer)
             for i in range(len(neuronsPerLayer)-1):
-                weights = unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))
+                weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
+                self.network.setConnectionWeights(i+1, weights)
                 biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
                 self.network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
-                #print(biases)
-            # TODO: read remaining file information into network
         self.__drawNetwork()
     
     def __drawNetwork(self):
@@ -169,7 +168,7 @@ class testingGUI:
                         (neuronCoords[1]+neuronCoords[3])/2,
                         (layer-1)*xDiffBetweenLayers,
                         (a+1)*neuronSpacingY,
-                        fill=self.__getConnectionWeightColour(layer-1, a),
+                        fill=self.__getConnectionWeightColour(layer-1, neuron, a),
                         tags='highlight')
                     if layer > 1:
                         self.nnCanvas.create_oval(
@@ -192,19 +191,22 @@ class testingGUI:
     def __getNeuronBiasColour(self, layer, neuron):
         bias = self.network.getNeuronBias(layer, neuron)
         maxBrightness = 1.0
-        brightness = int(round(255*bias/maxBrightness))
+        brightness = min(int(round(255*bias/maxBrightness)),255)
         hexValue = '%0.2X' % abs(brightness)
         if bias > 0:
             return '#00'+hexValue+'00'
         else:
             return '#'+hexValue+'0000'
     
-    # TODO: update this function to display correct weight colour
-    def __getConnectionWeightColour(self, layer, neuron):
-        activation = self.network.getNeuronActivation(layer, neuron)
-        brightness = int(round(255*activation))
-        hexValue = '%0.2X' % brightness
-        return '#'+hexValue*3
+    def __getConnectionWeightColour(self, layer, currentLayerNeuron, lastLayerNeuron):
+        weight = self.network.getConnectionWeights(layer, currentLayerNeuron, lastLayerNeuron)
+        maxBrightness = 1.0
+        brightness = min(int(round(255*weight/maxBrightness)),255)
+        hexValue = '%0.2X' % abs(brightness)
+        if weight > 0:
+            return '#00'+hexValue+'00'
+        else:
+            return '#'+hexValue+'0000'
     
     def __getNeuronActivationColour(self, layer, neuron):
         activation = self.network.getNeuronActivation(layer, neuron)
@@ -218,7 +220,6 @@ class testingGUI:
         # TODO: remove next two lines of debug (randomise network contents)
         for i in range(len(self.network.getStructure())):
             self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 1))
-            #self.network.setNeuronBias(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 2))
         self.__drawNetwork()
 
     def __loadMNIST(self, *args):
