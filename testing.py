@@ -58,13 +58,13 @@ class testingGUI:
         self.mnistLabel.grid(row=2,column=1)
         
         # neural network area
-        # TODO: add output digit
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
         self.nnProcessButton.grid(row=2, column=2)
         
         self.nnCanvas = tk.Canvas(width=pxSize*27, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=2)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
+        # TODO: add output digit
         
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
         self.loadNNbutton.grid(row=1,column=2)
@@ -96,6 +96,7 @@ class testingGUI:
     
     def __drawNetwork(self):
         self.nnCanvas.delete('all')
+        self.pixelCanvas.delete('highlight')
         layersToDraw = self.network.getStructure()[1:]
         neuronSpacingX = round((25*self.pixelSize) / (len(layersToDraw) + 1))
         neuronRadius = round(round((28*self.pixelSize) / (max(layersToDraw) + 1)) / 4)
@@ -157,11 +158,13 @@ class testingGUI:
             if not ('highlight' in clickedTags and 'current' in clickedTags) or ('highlight' in clickedTags and 'neuron' in clickedTags):
                 neuronCoords = self.nnCanvas.coords(clickedElement[0])
                 self.nnCanvas.delete('highlight')
+                self.pixelCanvas.delete('highlight')
             if 'neuron' in clickedTags and 'current' in clickedTags:
                 layer = int(clickedTags[clickedTags.find('L')+1:clickedTags.find(' ',clickedTags.find('L'))])
                 neuron = int(clickedTags[clickedTags.find('N')+1:clickedTags.find(' ',clickedTags.find('N'))])
                 neuronSpacingY = (28*self.pixelSize) / (self.network.getStructure()[layer-1] + 1)
                 xDiffBetweenLayers = ((neuronCoords[0]+neuronCoords[2])/2)/layer
+                pxSz = self.pixelSize
                 for a in range(self.network.getStructure()[layer-1]):
                     self.nnCanvas.create_line(
                         (neuronCoords[0]+neuronCoords[2])/2,
@@ -178,6 +181,17 @@ class testingGUI:
                             (a+1)*neuronSpacingY+(neuronCoords[2]-neuronCoords[0])/2,
                             fill=self.__getNeuronActivationColour(layer-1, a),
                             tags=('highlight', 'neuron', 'L{}'.format(layer-1), 'N{}'.format(a)))
+                    else:
+                        #print(a%28)
+                        #print((a-a%28)/28)
+                        self.pixelCanvas.create_rectangle(
+                            (a%28)*pxSz+2,
+                            ((a-a%28)/28)*pxSz+2,
+                            (a%28+0.5)*pxSz+1,
+                            ((a-a%28)/28+0.5)*pxSz+1,
+                            fill=self.__getConnectionWeightColour(layer-1, neuron, a),
+                            outline='#FFFFFF',
+                            tags='highlight')
                 self.nnCanvas.create_oval(
                     neuronCoords[0],
                     neuronCoords[1],
@@ -234,6 +248,8 @@ class testingGUI:
         self.mnistLabelVar.set('Label: {}'.format(mnistLabel))
         pxSz = self.pixelSize
         self.pixelCanvas.delete('all')
+        self.pixelCanvas.delete('highlight')
+        self.nnCanvas.delete('highlight')
         for row in range(28):
             for col in range(28):
                 pxBrightness = mnistDigit[col][row]
@@ -245,6 +261,8 @@ class testingGUI:
         if len(self.drawingCanvas.find_all()) == 1:
             return
         self.drawingCanvas.delete('background')
+        self.pixelCanvas.delete('highlight')
+        self.nnCanvas.delete('highlight')
         pxSz = self.pixelSize
         for row in range(28):
             for col in range(28):
