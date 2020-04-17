@@ -12,6 +12,7 @@ import math
 import mnist
 import nn
 from struct import unpack
+import numpy as np
 
 # TODO: remove this debug function
 from random import random
@@ -81,11 +82,17 @@ class testingGUI:
         with open('randomNetwork.nn', 'rb') as f:
             nLayers = unpack('B', f.read(1))[0]
             neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
-        if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
-            messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
-            return
-        self.network = nn.network()
-        self.network.setStructure(neuronsPerLayer)
+            if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
+                messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
+                return
+            self.network = nn.network()
+            self.network.setStructure(neuronsPerLayer)
+            for i in range(len(neuronsPerLayer)-1):
+                weights = unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))
+                biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
+                self.network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
+                #print(biases)
+            # TODO: read remaining file information into network
         self.__drawNetwork()
     
     def __drawNetwork(self):
@@ -120,7 +127,7 @@ class testingGUI:
                     (b+1)*neuronSpacingY-neuronRadius, 
                     (a+1)*neuronSpacingX+neuronRadius, 
                     (b+1)*neuronSpacingY+neuronRadius,
-                    fill=self.__getNeuronColour(a+1, b),
+                    fill=self.__getNeuronActivationColour(a+1, b),
                     tags=('neuron', 'L{}'.format(a+1), 'N{}'.format(b)))
                 if a == len(layersToDraw)-1:
                     self.nnCanvas.create_rectangle(
@@ -143,6 +150,8 @@ class testingGUI:
                 self.nnCanvas.itemconfig(maxRect, fill='#00FF00')
     
     def __highlightNode(self, event):
+        if len(self.nnCanvas.find_all())==0:
+            return
         clickedElement = event.widget.find_closest(event.x, event.y)
         clickedTags = self.nnCanvas.itemcget(clickedElement[0], 'tags')
         if len(clickedElement)==1:
@@ -160,7 +169,7 @@ class testingGUI:
                         (neuronCoords[1]+neuronCoords[3])/2,
                         (layer-1)*xDiffBetweenLayers,
                         (a+1)*neuronSpacingY,
-                        fill='#FF0000',
+                        fill=self.__getConnectionWeightColour(layer-1, a),
                         tags='highlight')
                     if layer > 1:
                         self.nnCanvas.create_oval(
@@ -168,14 +177,14 @@ class testingGUI:
                             (a+1)*neuronSpacingY-(neuronCoords[2]-neuronCoords[0])/2,
                             neuronCoords[2]-xDiffBetweenLayers,
                             (a+1)*neuronSpacingY+(neuronCoords[2]-neuronCoords[0])/2,
-                            fill=self.__getNeuronColour(layer-1, a),
+                            fill=self.__getNeuronActivationColour(layer-1, a),
                             tags=('highlight', 'neuron', 'L{}'.format(layer-1), 'N{}'.format(a)))
                 self.nnCanvas.create_oval(
                     neuronCoords[0],
                     neuronCoords[1],
                     neuronCoords[2],
                     neuronCoords[3],
-                    fill=self.__getNeuronColour(layer, neuron),
+                    fill=self.__getNeuronActivationColour(layer, neuron),
                     outline=self.__getNeuronBiasColour(layer, neuron),
                     width=(neuronCoords[2]-neuronCoords[0])/3,
                     tags='highlight')
@@ -190,7 +199,14 @@ class testingGUI:
         else:
             return '#'+hexValue+'0000'
     
-    def __getNeuronColour(self, layer, neuron):
+    # TODO: update this function to display correct weight colour
+    def __getConnectionWeightColour(self, layer, neuron):
+        activation = self.network.getNeuronActivation(layer, neuron)
+        brightness = int(round(255*activation))
+        hexValue = '%0.2X' % brightness
+        return '#'+hexValue*3
+    
+    def __getNeuronActivationColour(self, layer, neuron):
         activation = self.network.getNeuronActivation(layer, neuron)
         brightness = int(round(255*activation))
         hexValue = '%0.2X' % brightness
@@ -202,7 +218,7 @@ class testingGUI:
         # TODO: remove next two lines of debug (randomise network contents)
         for i in range(len(self.network.getStructure())):
             self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 1))
-            self.network.setNeuronBias(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 2))
+            #self.network.setNeuronBias(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 2))
         self.__drawNetwork()
 
     def __loadMNIST(self, *args):
