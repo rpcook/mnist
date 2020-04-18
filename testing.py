@@ -94,7 +94,7 @@ class testingGUI:
                 biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
                 self.network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
         self.__drawNetwork()
-    
+        
     def __drawNetwork(self):
         self.nnCanvas.delete('all')
         self.pixelCanvas.delete('highlight')
@@ -247,7 +247,8 @@ class testingGUI:
         return '#'+hexValue*3
     
     def __processNetwork(self):
-        if self.network.getStructure() == []:
+        self.network.checkNetworkComplete()
+        if not self.network.getNetworkComplete():
             return
         # TODO: remove next two lines of debug (randomise network contents)
         for i in range(len(self.network.getStructure())):
