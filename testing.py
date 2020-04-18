@@ -61,7 +61,7 @@ class testingGUI:
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
         self.nnProcessButton.grid(row=2, column=2)
         
-        self.nnCanvas = tk.Canvas(width=pxSize*27, height=pxSize*28)
+        self.nnCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=2)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
         # TODO: add output digit
@@ -131,15 +131,15 @@ class testingGUI:
                     tags=('neuron', 'L{}'.format(a+1), 'N{}'.format(b)))
                 if a == len(layersToDraw)-1:
                     self.nnCanvas.create_rectangle(
-                        (a+1)*neuronSpacingX+2*neuronRadius-1, 
+                        (a+1)*neuronSpacingX+5*neuronRadius-1, 
                         (b+1)*neuronSpacingY-neuronRadius-1, 
-                        (a+2)*neuronSpacingX+2*neuronRadius+1, 
+                        (a+2)*neuronSpacingX+5*neuronRadius+1, 
                         (b+1)*neuronSpacingY+neuronRadius+1)
                     activation = self.network.getNeuronActivation(a+1, b)
                     rect = self.nnCanvas.create_rectangle(
-                        (a+1)*neuronSpacingX+2*neuronRadius, 
+                        (a+1)*neuronSpacingX+5*neuronRadius, 
                         (b+1)*neuronSpacingY-neuronRadius, 
-                        (a+1+activation)*neuronSpacingX+2*neuronRadius+1, 
+                        (a+1+activation)*neuronSpacingX+5*neuronRadius+1, 
                         (b+1)*neuronSpacingY+neuronRadius+1,
                         fill='#FF0000',
                         width=0)
@@ -148,6 +148,11 @@ class testingGUI:
                         maxRect = rect
             if maxActivation != 0:
                 self.nnCanvas.itemconfig(maxRect, fill='#00FF00')
+        for i in range(10):
+            self.nnCanvas.create_text(
+                len(layersToDraw)*neuronSpacingX+3*neuronRadius,
+                (i+1)*neuronSpacingY,
+                text=str(i))
     
     def __highlightNode(self, event):
         if len(self.nnCanvas.find_all())==0:
