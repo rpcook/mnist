@@ -34,6 +34,9 @@ class network:
             self.__neuronBias.append(np.zeros(layerSize))
             self.__neuronConnectionWeights.append(np.zeros(1))
         
+    def getStructure(self):
+        return self.__neuronsPerLayer
+    
     def checkNetworkComplete(self):
         self.__networkComplete = True
         if self.__neuronsPerLayer == []:
@@ -52,9 +55,9 @@ class network:
                 self.__networkComplete = False
         return self.__networkComplete
 
-    def getStructure(self):
-        return self.__neuronsPerLayer
-    
+    def getNetworkComplete(self):
+        return self.__networkComplete
+
     def setNeuronActivation(self, layer, neuron, activation):
         self.__neuronActivation[layer][neuron] = activation
     
