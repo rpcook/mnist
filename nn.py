@@ -21,6 +21,7 @@ class network:
         self.__neuronActivation = []
         self.__neuronBias = []
         self.__neuronConnectionWeights = []
+        self.__networkComplete = False
     
     def setStructure(self, structure):
         self.__neuronsPerLayer = structure
@@ -33,6 +34,24 @@ class network:
             self.__neuronBias.append(np.zeros(layerSize))
             self.__neuronConnectionWeights.append(np.zeros(1))
         
+    def checkNetworkComplete(self):
+        self.__networkComplete = True
+        if self.__neuronsPerLayer == []:
+            self.__networkComplete = False
+        if self.__neuronBias == []:
+            self.__networkComplete = False
+        if self.__neuronConnectionWeights == []:
+            self.__networkComplete = False
+        for i in range(len(self.__neuronBias)):
+            if self.__neuronsPerLayer[i] != np.shape(self.__neuronBias[i])[0]:
+                self.__networkComplete = False
+        for i in range(len(self.__neuronConnectionWeights)-1):
+            if np.shape(self.__neuronConnectionWeights[i+1])[0] != self.__neuronsPerLayer[i+1]:
+                self.__networkComplete = False
+            if np.shape(self.__neuronConnectionWeights[i+1])[1] != self.__neuronsPerLayer[i]:
+                self.__networkComplete = False
+        return self.__networkComplete
+
     def getStructure(self):
         return self.__neuronsPerLayer
     
