@@ -61,7 +61,7 @@ class testingGUI:
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
         self.nnProcessButton.grid(row=2, column=2)
         
-        self.nnCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28)
+        self.nnCanvas = tk.Canvas(width=pxSize*43, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=2)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
         # TODO: add output digit
@@ -72,6 +72,7 @@ class testingGUI:
         # TODO: graphics of network activity (pending actually how to evaluate that...)
         
         self.network = nn.network()
+        self.truthResult = 'drawn'
         
     def __loadNetwork(self):
         ##### following four lines commented during debug to save mouseclicks
@@ -148,6 +149,18 @@ class testingGUI:
                         maxRect = rect
             if maxActivation != 0:
                 self.nnCanvas.itemconfig(maxRect, fill='#00FF00')
+                if self.truthResult == 'drawn':
+                    resultColour = '#000000'
+                elif self.truthResult == int(round((self.nnCanvas.coords(maxRect)[1])/neuronSpacingY)-1):
+                    resultColour = '#00FF00'
+                else:
+                    resultColour = '#FF0000'
+                self.nnCanvas.create_text(
+                    (len(layersToDraw)+2)*neuronSpacingX+8*neuronRadius,
+                    self.pixelSize*14,
+                    font=('Arial',self.pixelSize*18),
+                    fill=resultColour,
+                    text=str(round((self.nnCanvas.coords(maxRect)[1])/neuronSpacingY)-1))
         for i in range(10):
             self.nnCanvas.create_text(
                 len(layersToDraw)*neuronSpacingX+3*neuronRadius,
@@ -251,6 +264,7 @@ class testingGUI:
             return
         mnistDigit, mnistLabel = mnistTestData.getData(testIndex, 'test')
         self.mnistLabelVar.set('Label: {}'.format(mnistLabel))
+        self.truthResult = mnistLabel
         pxSz = self.pixelSize
         self.pixelCanvas.delete('all')
         self.pixelCanvas.delete('highlight')
@@ -269,6 +283,7 @@ class testingGUI:
         self.pixelCanvas.delete('highlight')
         self.nnCanvas.delete('highlight')
         pxSz = self.pixelSize
+        self.truthResult = 'drawn'
         for row in range(28):
             for col in range(28):
                 pxX = row*pxSz+pxSz/2
