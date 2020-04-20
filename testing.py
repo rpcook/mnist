@@ -14,14 +14,6 @@ import nn
 from struct import unpack
 import numpy as np
 
-# TODO: remove this debug function
-from random import random
-def randomArray(size, multiplier):
-    x=[]
-    for i in range(size):
-        x.append(1-multiplier*random())
-    return x
-
 mnistTestData = mnist.database(loadTestOnly=True)
 
 class testingGUI:
@@ -64,12 +56,9 @@ class testingGUI:
         self.nnCanvas = tk.Canvas(width=pxSize*43, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=2)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
-        # TODO: add output digit
         
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
         self.loadNNbutton.grid(row=1,column=2)
-        
-        # TODO: graphics of network activity (pending actually how to evaluate that...)
         
         self.network = nn.network()
         self.truthResult = 'drawn'
@@ -200,8 +189,6 @@ class testingGUI:
                             fill=self.__getNeuronActivationColour(layer-1, a),
                             tags=('highlight', 'neuron', 'L{}'.format(layer-1), 'N{}'.format(a)))
                     else:
-                        #print(a%28)
-                        #print((a-a%28)/28)
                         self.pixelCanvas.create_rectangle(
                             (a%28)*pxSz+2,
                             ((a-a%28)/28)*pxSz+2,
@@ -247,13 +234,20 @@ class testingGUI:
         return '#'+hexValue*3
     
     def __processNetwork(self):
-        self.network.checkNetworkComplete()
-        if not self.network.getNetworkComplete():
+        if not self.network.checkNetworkComplete():
             return
-        # TODO: remove next two lines of debug (randomise network contents)
-        for i in range(len(self.network.getStructure())):
-            self.network.setNeuronActivation(i, range(self.network.getStructure()[i]), randomArray(self.network.getStructure()[i], 1))
-        self.__drawNetwork()
+        totalActivation = 0
+        for row in range(28):
+            for col in range(28):
+                pixelFill = self.pixelCanvas.itemcget('x%0.2d' % col + 'y%0.2d' % row, 'fill')
+                if len(pixelFill)==0:
+                    activation = 0
+                else:
+                    activation = int(pixelFill[1:3], 16)/255
+                    totalActivation += activation
+                self.network.setNeuronActivation(0, col+28*row, activation)
+        if self.network.evaluate():
+            self.__drawNetwork()
 
     def __loadMNIST(self, *args):
         try:
@@ -274,7 +268,15 @@ class testingGUI:
             for col in range(28):
                 pxBrightness = mnistDigit[col][row]
                 pxColour = '#%02x%02x%02x' % (int(pxBrightness),int(pxBrightness),int(pxBrightness))
-                self.pixelCanvas.create_rectangle(row*pxSz+1,col*pxSz+1,(row+1)*pxSz+2,(col+1)*pxSz+2,fill=pxColour,width=pxSz/10)
+                self.pixelCanvas.create_rectangle(
+                    row*pxSz+1,
+                    col*pxSz+1,
+                    (row+1)*pxSz+2,
+                    (col+1)*pxSz+2,
+                    fill=pxColour,
+                    tags=('x%0.2d' % col + 'y%0.2d' % row),
+                    width=pxSz/10)
+        self.__processNetwork()
 
     def __procDrawing(self):
         self.pixelCanvas.delete('all')
@@ -298,8 +300,16 @@ class testingGUI:
                 brightness = (150/(max(max(distanceN,0.5)-0.5,0.1))**2)-50
                 brightnessN = max(min(brightness,255),0)
                 pxColour = '#%02x%02x%02x' % (int(brightnessN),int(brightnessN),int(brightnessN))
-                self.pixelCanvas.create_rectangle(row*pxSz+1,col*pxSz+1,(row+1)*pxSz+2,(col+1)*pxSz+2,fill=pxColour,width=pxSz/10)
+                self.pixelCanvas.create_rectangle(
+                    row*pxSz+1,
+                    col*pxSz+1,
+                    (row+1)*pxSz+2,
+                    (col+1)*pxSz+2,
+                    fill=pxColour,
+                    tags=('x%0.2d' % col + 'y%0.2d' % row),
+                    width=pxSz/10)
         self.__addDrawingBackground()
+        self.__processNetwork()
 
     def __addDrawingBackground(self):
         pxSize = self.pixelSize
