@@ -22,6 +22,15 @@ class network:
         self.__neuronBias = []
         self.__neuronConnectionWeights = []
         self.__networkComplete = False
+        
+    def evaluate(self):
+        try:
+            for layerIndex in range(len(self.__neuronsPerLayer)-1):
+                z=self.__neuronConnectionWeights[layerIndex+1] @ self.__neuronActivation[layerIndex] + self.__neuronBias[layerIndex+1]
+                self.__neuronActivation[layerIndex+1] = sigmoid(z)
+            return True
+        except:
+            return False
     
     def setStructure(self, structure):
         self.__neuronsPerLayer = structure
