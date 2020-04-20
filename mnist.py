@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 12 13:52:46 2020
 
-@author: Rob.Cook
-"""
 import numpy as np
 from struct import unpack
 

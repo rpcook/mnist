@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 12 16:23:33 2020
-
-@author: Rob.Cook
-"""
 
 import tkinter as tk
 from tkinter import filedialog
@@ -64,12 +59,10 @@ class testingGUI:
         self.truthResult = 'drawn'
         
     def __loadNetwork(self):
-        ##### following four lines commented during debug to save mouseclicks
-        # file = filedialog.askopenfile(title='Select neural network', filetypes=(("neural network files","*.nn"),))
-        # if file is None:
-        #     return
-        #with open(file.name, 'rb') as f:
-        with open('randomNetwork.nn', 'rb') as f:
+        file = filedialog.askopenfile(title='Select neural network', filetypes=(("neural network files","*.nn"),))
+        if file is None:
+            return
+        with open(file.name, 'rb') as f:
             nLayers = unpack('B', f.read(1))[0]
             neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
             if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
