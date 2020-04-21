@@ -59,7 +59,7 @@ class testingGUI:
         self.truthResult = 'drawn'
         
     def __loadNetwork(self):
-        file = filedialog.askopenfile(title='Select neural network', filetypes=(("neural network files","*.nn"),))
+        file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
         if file is None:
             return
         with open(file.name, 'rb') as f:
