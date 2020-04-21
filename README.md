@@ -25,6 +25,7 @@ Binary data, little endian
 | float | 4 | weight for neuron 1 in layer 1 to neuron 1 in layer 0 |
 | ... | ... | ... |
 | float | 4 | weight for neuron 1 in layer 1 to last neuron in layer 0 |
+| ... | ... | ... |
 | float | 4 | weight for last neuron in layer 1 to neuron 0 in layer 0 |
 | float | 4 | weight for last neuron in layer 1 to neuron 1 in layer 0 |
 | ... | ... | ... |
