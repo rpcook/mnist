@@ -5,7 +5,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 import math
 import mnist
-import nn
+import neuralnetwork as nn
 from struct import unpack
 import numpy as np
 
