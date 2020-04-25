@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import nerualnetwork as nn
+import neuralnetwork as nn
 from time import time
 
 class trainer:
