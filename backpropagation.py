@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import nn
+import nerualnetwork as nn
 from time import time
 
 class trainer:
@@ -16,6 +16,9 @@ class trainer:
         for i in range(len(structure)-1):
             self.network.setConnectionWeights(i+1, np.random.random((structure[i+1],structure[i]))*2-1)
             self.network.setNeuronBias(i+1, range(structure[i+1]), np.random.random(structure[i+1])*2-1)
+    
+    def setNetwork(self, network):
+        self.network = network
     
     def getNetwork(self):
         return self.network
