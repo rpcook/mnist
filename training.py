@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 from tkinter import scrolledtext
-from tkinter import ttk
+from tkinter import messagebox
 from struct import pack
 from random import random
 import backpropagation as bp
+import neuralnetwork as nn
+from struct import unpack
+import numpy as np
 
 class testingGUI:
     def __init__(self, master):
@@ -20,12 +24,13 @@ class testingGUI:
         
         tk.Label(text='Random seed:').grid(row=1, column=0)
         self.seedInput = tk.Entry()
+        self.seedInput.insert(0, '0')
         self.seedInput.grid(row=1, column=1, sticky='W')
         self.seedCheckVar = tk.IntVar()
         tk.Checkbutton(text='Randomise', variable=self.seedCheckVar, command=self.__randomiseCheck).grid(row=2, column=1, sticky='W')
         
         tk.Button(text='Initialise Network').grid(row=3, column=0)
-        tk.Button(text='Load Network').grid(row=3, column=1)
+        tk.Button(text='Load Network', command=self.__loadNetwork).grid(row=3, column=1)
         
         tk.Label(text='Mini-batch size:').grid(row=4, column=0)
         self.batchSizeInput = tk.Entry()
@@ -40,14 +45,14 @@ class testingGUI:
         tk.Button(text='Train Network').grid(row=6, column=0)
         tk.Button(text='Train Network & Test Performance').grid(row=6, column=1)
         
-        self.messageLog = scrolledtext.ScrolledText(height=5, width=40, wrap=tk.WORD)
+        self.messageLog = scrolledtext.ScrolledText(height=5, width=40, wrap=tk.WORD, state='disabled')
         self.messageLog.grid(row=7, column=0, columnspan=2)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
         self.trainingProgressBar.grid(row=8, column=0, columnspan=2)
         
-        tk.Button(text='Save Network').grid(row=9, column=0)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=9, column=0)
         tk.Button(text='Save Network & Log').grid(row=9, column=1)
         
         tk.Button(text='Evaluate Network Performance').grid(row=3, column=2)
@@ -61,12 +66,43 @@ class testingGUI:
         self.confusionCanvas.grid(row=5, column=2, rowspan=4)
         
         self.performanceLabelContent = tk.StringVar()
-        self.performanceLabelContent.set('Network accuracy: #')
+        self.performanceLabelContent.set('Overall network accuracy: #')
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=9, column=2)
         
         self.trainer = bp.trainer()
     
+    def __writeToLog(self, message):
+        self.messageLog.configure(state='normal')
+        self.messageLog.insert(tk.END, message)
+        self.messageLog.configure(state='disabled')
+        self.messageLog.yview(tk.END)
+        
+    def __clearLog(self):
+        self.messageLog.configure(state='normal')
+        self.messageLog.delete(1.0, tk.END)
+        self.messageLog.configure(state='disabled')
+    
+    def __loadNetwork(self):
+        file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
+        if file is None:
+            return
+        with open(file.name, 'rb') as f:
+            nLayers = unpack('B', f.read(1))[0]
+            neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
+            if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
+                messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
+                return
+            network = nn.network()
+            network.setStructure(neuronsPerLayer)
+            for i in range(len(neuronsPerLayer)-1):
+                weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
+                network.setConnectionWeights(i+1, weights)
+                biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
+                network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
+        self.trainer.setNetwork(network)
+        self.__writeToLog('Loaded network with structure: ' + str(network.getStructure())[1:-1] +'.\n')
+
     def __randomiseCheck(self):
         if self.seedCheckVar.get() == 0:
             self.seedInput.configure(state='normal')
@@ -76,13 +112,11 @@ class testingGUI:
     def __createNetwork(self):
         pass
     
-    def __testButton(self):
+    def __saveButtonHandler(self):
         file = filedialog.asksaveasfile(filetypes=(('nn files', '\*.nn'),))
         if file is None:
             return
-        trainer = bp.trainer()
-        trainer.initialiseNetwork([28*28, 16, 16, 10])
-        self.__saveNetwork(trainer.getNetwork(), file.name)
+        self.__saveNetwork(self.trainer.getNetwork(), file.name)
     
     def __saveNetwork(self, network, fileName):
         with open(fileName, 'wb') as f:
