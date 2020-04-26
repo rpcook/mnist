@@ -6,11 +6,12 @@ from tkinter import filedialog
 from tkinter import scrolledtext
 from tkinter import messagebox
 from struct import pack
-from random import random
 import backpropagation as bp
 import neuralnetwork as nn
 from struct import unpack
 import numpy as np
+import re
+import time
 
 class testingGUI:
     def __init__(self, master):
@@ -29,7 +30,7 @@ class testingGUI:
         self.seedCheckVar = tk.IntVar()
         tk.Checkbutton(text='Randomise', variable=self.seedCheckVar, command=self.__randomiseCheck).grid(row=2, column=1, sticky='W')
         
-        tk.Button(text='Initialise Network').grid(row=3, column=0)
+        tk.Button(text='Initialise Network', command=self.__initialiseNetwork).grid(row=3, column=0)
         tk.Button(text='Load Network', command=self.__loadNetwork).grid(row=3, column=1)
         
         tk.Label(text='Mini-batch size:').grid(row=4, column=0)
@@ -42,35 +43,76 @@ class testingGUI:
         self.scaleFactorInput.insert(0, '1.0')
         self.scaleFactorInput.grid(row=5, column=1, sticky='W')
         
-        tk.Button(text='Train Network').grid(row=6, column=0)
-        tk.Button(text='Train Network & Test Performance').grid(row=6, column=1)
-        
-        self.messageLog = scrolledtext.ScrolledText(height=5, width=40, wrap=tk.WORD, state='disabled')
-        self.messageLog.grid(row=7, column=0, columnspan=2)
+        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=6, column=0)
+        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=6, column=1)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
-        self.trainingProgressBar.grid(row=8, column=0, columnspan=2)
+        self.trainingProgressBar.grid(row=7, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=9, column=0)
-        tk.Button(text='Save Network & Log').grid(row=9, column=1)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=8, column=0)
+        tk.Button(text='Save Network & Log').grid(row=8, column=1)
         
-        tk.Button(text='Evaluate Network Performance').grid(row=3, column=2)
+        self.messageLog = scrolledtext.ScrolledText(height=5, width=70, wrap=tk.WORD, state='disabled')
+        self.messageLog.grid(row=9, column=0, columnspan=2)
+        
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=10, sticky='NS')
+        
+        tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
         self.evaluateProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
-        self.evaluateProgressBar.grid(row=4, column=2)
-        
-        self.pxSize = 30
-        self.confusionCanvas = tk.Canvas(width=11*self.pxSize, height=11*self.pxSize)
-        self.confusionCanvas.grid(row=5, column=2, rowspan=4)
+        self.evaluateProgressBar.grid(row=0, column=4)
         
         self.performanceLabelContent = tk.StringVar()
         self.performanceLabelContent.set('Overall network accuracy: #')
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
-        self.performanceLabel.grid(row=9, column=2)
+        self.performanceLabel.grid(row=1, column=4)
+        
+        self.pxSize = 30
+        self.confusionCanvas = tk.Canvas(width=11*self.pxSize, height=11*self.pxSize, bg='#000040')
+        self.confusionCanvas.grid(row=2, column=3, rowspan=8, columnspan=2)
         
         self.trainer = bp.trainer()
+        self.networkPerformance = np.zeros((10,10))
+        
+        self.__drawConfusionMatrix()
+    
+    def __drawConfusionMatrix(self):
+        pass
+    
+    def __trainNetwork(self):
+        self.__clearLog()
+        try:
+            miniBatchSize = int(self.batchSizeInput.get())
+        except:
+            self.__writeToLog('ERROR: Mini-batch size must be an integer.\n')
+            return
+        if self.trainer.getNetwork().getStructure() == []:
+            self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
+            return
+        self.__writeToLog('Training network...\n')
+        self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+        self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
+        if not self.trainer.checkMNISTload():
+            self.__writeToLog('Loading MNIST database to memory...')
+            self.trainingProgressBar['value'] = 50
+            root.update()
+            self.trainer.loadMNIST()
+            self.trainingProgressBar['value'] = 100
+            self.__writeToLog('done.\n')
+            root.update()
+            time.sleep(0.2)
+            self.trainingProgressBar['value'] = 0
+        pass
+    
+    def __evaluateNetwork(self):
+        print('evaluate')
+        pass
+    
+    def __trainAndEvaluateNetwork(self):
+        self.__trainNetwork()
+        self.__evaluateNetwork()
     
     def __writeToLog(self, message):
         self.messageLog.configure(state='normal')
@@ -82,6 +124,22 @@ class testingGUI:
         self.messageLog.configure(state='normal')
         self.messageLog.delete(1.0, tk.END)
         self.messageLog.configure(state='disabled')
+    
+    def __initialiseNetwork(self):
+        #try:
+        hiddenLayersStr = re.findall('[0-9]+', self.structureInput.get())
+        structure = [28*28]
+        for layerStr in hiddenLayersStr:
+            structure.append(int(layerStr))
+        structure.append(10)
+        seed = []
+        if self.seedCheckVar.get() == 0:
+            try:
+                seed.append(int(self.seedInput.get()))
+            except:
+                self.__writeToLog('Random seed must be an integer, ignoring entered value.\n')
+        self.trainer.initialiseNetwork(structure, seed)
+        self.__writeToLog('Initialised random network with structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] +'.\n')
     
     def __loadNetwork(self):
         file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
@@ -109,9 +167,6 @@ class testingGUI:
         else:
             self.seedInput.configure(state='disabled')
     
-    def __createNetwork(self):
-        pass
-    
     def __saveButtonHandler(self):
         file = filedialog.asksaveasfile(filetypes=(('nn files', '\*.nn'),))
         if file is None:
@@ -130,28 +185,6 @@ class testingGUI:
                 for j in range(network.getStructure()[i+1]):
                     f.write(pack('<f', network.getNeuronBias(i, j)))
 
-    def __saveRandomNN(self):
-        with open('randomNetwork.nn', 'wb') as f:
-            f.write(pack('B', 4))
-            f.write(pack('<4H', 28*28, 16, 16, 10))
-            for a in range(16): # weights for 1st layer
-                for b in range(28*28):
-                    f.write(pack('<f', 2*random()-1))
-            for a in range(16): # biases for 1st layer
-                f.write(pack('<f', 2*random()-1))
-                
-            for a in range(16): # weights for 2nd layer
-                for b in range(16):
-                    f.write(pack('<f', 2*random()-1))
-            for a in range(16): # biases for 2nd layer
-                f.write(pack('<f', 2*random()-1))
-                
-            for a in range(10): # weights for last layer
-                for b in range(16):
-                    f.write(pack('<f', 2*random()-1))
-            for a in range(10): # biases for last layer
-                f.write(pack('<f', 2*random()-1))
-        
 root = tk.Tk()
 g = testingGUI(root)
 root.mainloop()
