@@ -8,6 +8,7 @@ class trainer:
     def __init__(self):
         self.network = nn.network()
         self.__mnistLoaded = False
+        self.__miniBatchSize = []
     
     def initialiseNetwork(self, structure, *seed):
         self.network.setStructure(structure)
@@ -24,6 +25,12 @@ class trainer:
     
     def getNetwork(self):
         return self.network
+    
+    def setMiniBatchSize(self, miniBatchSize):
+        self.__miniBatchSize = miniBatchSize
+    
+    def getMiniBatchSize(self):
+        return self.__miniBatchSize
     
     def checkMNISTload(self):
         return self.__mnistLoaded

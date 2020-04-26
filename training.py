@@ -85,6 +85,7 @@ class testingGUI:
         self.__clearLog()
         try:
             miniBatchSize = int(self.batchSizeInput.get())
+            self.trainer.setMiniBatchSize(miniBatchSize)
         except:
             self.__writeToLog('ERROR: Mini-batch size must be an integer.\n')
             return
