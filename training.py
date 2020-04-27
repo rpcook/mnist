@@ -38,25 +38,30 @@ class testingGUI:
         self.batchSizeInput.insert(0, '100')
         self.batchSizeInput.grid(row=4, column=1, sticky='W')
         
-        tk.Label(text='Gradient descent scale-factor:').grid(row=5, column=0)
+        tk.Label(text='Total images to use:').grid(row=5, column=0)
+        self.totalSizeInput = tk.Entry()
+        self.totalSizeInput.insert(0, '60000')
+        self.totalSizeInput.grid(row=5, column=1, sticky='W')
+        
+        tk.Label(text='Gradient descent scale-factor:').grid(row=6, column=0)
         self.scaleFactorInput = tk.Entry()
         self.scaleFactorInput.insert(0, '1.0')
-        self.scaleFactorInput.grid(row=5, column=1, sticky='W')
+        self.scaleFactorInput.grid(row=6, column=1, sticky='W')
         
-        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=6, column=0)
-        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=6, column=1)
+        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=7, column=0)
+        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=7, column=1)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
-        self.trainingProgressBar.grid(row=7, column=0, columnspan=2, sticky='EW')
+        self.trainingProgressBar.grid(row=8, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=8, column=0)
-        tk.Button(text='Save Network & Log').grid(row=8, column=1)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=9, column=0)
+        tk.Button(text='Save Network & Log').grid(row=9, column=1)
         
-        self.messageLog = scrolledtext.ScrolledText(height=5, width=70, wrap=tk.WORD, state='disabled')
-        self.messageLog.grid(row=9, column=0, columnspan=2)
+        self.messageLog = scrolledtext.ScrolledText(height=10, width=70, wrap=tk.WORD, state='disabled')
+        self.messageLog.grid(row=10, column=0, columnspan=2)
         
-        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=10, sticky='NS')
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=11, sticky='NS')
         
         tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
@@ -69,9 +74,9 @@ class testingGUI:
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=1, column=4)
         
-        self.pxSize = 30
+        self.pxSize = 36
         self.confusionCanvas = tk.Canvas(width=11*self.pxSize, height=11*self.pxSize, bg='#000040')
-        self.confusionCanvas.grid(row=2, column=3, rowspan=8, columnspan=2)
+        self.confusionCanvas.grid(row=2, column=3, rowspan=9, columnspan=2)
         
         self.trainer = bp.trainer()
         self.networkPerformance = np.zeros((10,10))
@@ -97,7 +102,7 @@ class testingGUI:
         self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
         if not self.trainer.checkMNISTload():
             self.__writeToLog('Loading MNIST database to memory...')
-            self.trainingProgressBar['value'] = 50
+            self.trainingProgressBar['value'] = 10
             root.update()
             self.trainer.loadMNIST()
             self.trainingProgressBar['value'] = 100
