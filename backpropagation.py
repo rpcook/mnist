@@ -10,6 +10,7 @@ class trainer:
         self.__mnistLoaded = False
         self.__miniBatchSize = []
         self.__inputSize = []
+        self.__scaleFactor = []
     
     def initialiseNetwork(self, structure, *seed):
         self.network.setStructure(structure)
@@ -38,6 +39,12 @@ class trainer:
     
     def getInputSize(self):
         return self.__inputSize
+    
+    def setGradientScaleFactor(self, scaleFactor):
+        self.__scaleFactor = scaleFactor
+    
+    def getGradientScaleFactor(self):
+        return self.__scaleFactor
     
     def checkMNISTload(self):
         return self.__mnistLoaded
