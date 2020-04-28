@@ -88,6 +88,10 @@ class testingGUI:
     
     def __trainNetwork(self):
         self.__clearLog()
+        if self.trainer.getNetwork().getStructure() == []:
+            self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
+            return
+        
         try:
             miniBatchSize = int(self.batchSizeInput.get())
             self.trainer.setMiniBatchSize(miniBatchSize)
@@ -97,6 +101,7 @@ class testingGUI:
         if miniBatchSize > 30000:
             self.__writeToLog('ERROR: Mini-batch size must be less than 30,000.\n')
             return
+        
         try:
             inputSize = int(self.totalSizeInput.get())
             self.trainer.setInputSize(inputSize)
@@ -109,13 +114,24 @@ class testingGUI:
         if inputSize < miniBatchSize:
             self.__writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
             return
-        if self.trainer.getNetwork().getStructure() == []:
-            self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
+        
+        try:
+            gradientScaleFactor = float(self.scaleFactorInput.get())
+            self.trainer.setGradientScaleFactor(gradientScaleFactor)
+        except:
+            self.__writeToLog('ERROR: Gradient descent scale-factor size must be a real number.\n')
             return
+        if not gradientScaleFactor > 0:
+            self.__writeToLog('ERROR: Gradient descent scale-factor size must be positive.\n')
+            return
+        
         self.__writeToLog('Verifying back-propagation trainer...\n')
         self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
         self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
-        self.__writeToLog('Input size is {}\n'.format(inputSize))
+        self.__writeToLog('Total images to use is {}\n'.format(inputSize))
+        self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
+        self.__writeToLog('Verifying back-propagation trainer...done.\n')
+        
         if not self.trainer.checkMNISTload():
             self.__writeToLog('Loading MNIST database to memory...')
             self.trainingProgressBar['value'] = 10
@@ -126,7 +142,8 @@ class testingGUI:
             root.update()
             time.sleep(0.2)
             self.trainingProgressBar['value'] = 0
-        pass
+        else:
+            self.__writeToLog('MNIST database already loaded into memory.\n')
     
     def __evaluateNetwork(self):
         print('evaluate')
