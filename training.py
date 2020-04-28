@@ -94,12 +94,28 @@ class testingGUI:
         except:
             self.__writeToLog('ERROR: Mini-batch size must be an integer.\n')
             return
+        if miniBatchSize > 30000:
+            self.__writeToLog('ERROR: Mini-batch size must be less than 30,000.\n')
+            return
+        try:
+            inputSize = int(self.totalSizeInput.get())
+            self.trainer.setInputSize(inputSize)
+        except:
+            self.__writeToLog('ERROR: Total images to use size must be an integer.\n')
+            return
+        if inputSize > 60000:
+            self.__writeToLog('ERROR: Total images to use size must be less than 60,000.\n')
+            return
+        if inputSize < miniBatchSize:
+            self.__writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
+            return
         if self.trainer.getNetwork().getStructure() == []:
             self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
             return
-        self.__writeToLog('Training network...\n')
+        self.__writeToLog('Verifying back-propagation trainer...\n')
         self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
         self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
+        self.__writeToLog('Input size is {}\n'.format(inputSize))
         if not self.trainer.checkMNISTload():
             self.__writeToLog('Loading MNIST database to memory...')
             self.trainingProgressBar['value'] = 10
