@@ -130,20 +130,26 @@ class testingGUI:
         self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
         self.__writeToLog('Total images to use is {}\n'.format(inputSize))
         self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
-        self.__writeToLog('Verifying back-propagation trainer...done.\n')
+        self.__writeToLog('Verifying back-propagation trainer...done.\n\n')
         
         if not self.trainer.checkMNISTload():
             self.__writeToLog('Loading MNIST database to memory...')
-            self.trainingProgressBar['value'] = 10
-            root.update()
+            self.__updateTrainingProgressBar(10)
             self.trainer.loadMNIST()
-            self.trainingProgressBar['value'] = 100
             self.__writeToLog('done.\n')
-            root.update()
+            self.__updateTrainingProgressBar(100)
             time.sleep(0.2)
             self.trainingProgressBar['value'] = 0
         else:
             self.__writeToLog('MNIST database already loaded into memory.\n')
+    
+    def __updateTrainingProgressBar(self, progress):
+        self.trainingProgressBar['value'] = progress
+        root.update()
+    
+    def __updateEvaluateProgressBar(self, progress):
+        self.evaluateProgressBar['value'] = progress
+        root.update()
     
     def __evaluateNetwork(self):
         print('evaluate')
