@@ -74,17 +74,35 @@ class testingGUI:
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=1, column=4)
         
-        self.pxSize = 36
-        self.confusionCanvas = tk.Canvas(width=11*self.pxSize, height=11*self.pxSize, bg='#000040')
+        self.__gridSize = 36
+        self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
         self.confusionCanvas.grid(row=2, column=3, rowspan=9, columnspan=2)
         
         self.trainer = bp.trainer()
-        self.networkPerformance = np.zeros((10,10))
+        self.__confusionMatrix = np.zeros((10,10))
         
         self.__drawConfusionMatrix()
     
     def __drawConfusionMatrix(self):
-        pass
+        cm = self.__confusionMatrix
+        cc = self.confusionCanvas
+        gd = self.__gridSize
+        cc.delete('all')
+        cc.create_text(gd*6,gd*0.3,text='Actual digit')
+        cc.create_text(gd*0.3,gd*6,angle=90,text='Predicted digit')
+        for i in range(10):
+            cc.create_text((i+1.5)*gd,gd*0.7, text=str(i))
+            cc.create_text(gd*0.7,(i+1.5)*gd, text=str(i), angle=90)
+        if np.any(cm):
+            # TODO: have some nice R/G colouring here for cells
+            cellColour = [['']*10]*10
+        else:
+            cellColour = [['']*10]*10
+        for i in range(10):
+            for j in range(10):
+                cc.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
+                if np.any(cm):
+                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=str(cm[i][j]))
     
     def __trainNetwork(self):
         self.__clearLog()
@@ -152,8 +170,13 @@ class testingGUI:
         root.update()
     
     def __evaluateNetwork(self):
-        print('evaluate')
-        pass
+        self.__clearLog()
+        if self.trainer.getNetwork().getStructure() == []:
+            self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
+            return
+
+        self.__confusionMatrix = np.random.randint(0,10000,(10,10))
+        self.__drawConfusionMatrix()
     
     def __trainAndEvaluateNetwork(self):
         self.__trainNetwork()
