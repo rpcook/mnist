@@ -12,6 +12,7 @@ from struct import unpack
 import numpy as np
 import re
 import time
+from PIL import Image, ImageTk
 
 class testingGUI:
     def __init__(self, master):
@@ -80,6 +81,7 @@ class testingGUI:
         
         self.trainer = bp.trainer()
         self.__confusionMatrix = np.zeros((10,10))
+        self.__images = []
         
         self.__drawConfusionMatrix()
     
@@ -88,22 +90,37 @@ class testingGUI:
         cc = self.confusionCanvas
         gd = self.__gridSize
         cc.delete('all')
+        self.__images = []
         cc.create_text(gd*6,gd*0.3,text='Actual digit')
         cc.create_text(gd*0.3,gd*6,angle=90,text='Predicted digit')
         for i in range(10):
             cc.create_text((i+1.5)*gd,gd*0.7, text=str(i))
             cc.create_text(gd*0.7,(i+1.5)*gd, text=str(i), angle=90)
+        
+        cellColour = [['#ff0000' for x in range(10)] for x in range(10)] 
+        for i in range(10):
+            cellColour[i][i] = '#00ff00'
+        
         if np.any(cm):
-            # TODO: have some nice R/G colouring here for cells
-            cellColour = [['']*10]*10
+            gridAlpha = np.ones((10,10)) # TODO improve this
         else:
-            cellColour = [['']*10]*10
+            gridAlpha = np.zeros((10,10))
+        
         for i in range(10):
             for j in range(10):
-                cc.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
+                self.__creat_rectangle_alpha((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j], alpha=gridAlpha[i][j])
                 if np.any(cm):
                     cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=str(cm[i][j]))
     
+    def __creat_rectangle_alpha(self, x1, y1, x2, y2, **kwargs):
+        alpha = int(kwargs.pop('alpha') * 255)
+        fill = kwargs.pop('fill')
+        fill = root.winfo_rgb(fill) + (alpha,)
+        image = Image.new('RGBA', (x2-x1, y2-y1), fill)
+        self.__images.append(ImageTk.PhotoImage(image))
+        self.confusionCanvas.create_image(x1, y1, image=self.__images[-1], anchor='nw')
+        self.confusionCanvas.create_rectangle(x1, y1, x2, y2, fill='')
+
     def __trainNetwork(self):
         self.__clearLog()
         if self.trainer.getNetwork().getStructure() == []:
