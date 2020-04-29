@@ -110,6 +110,10 @@ class testingGUI:
             self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
             return
         
+        if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
+            self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
+            return
+        
         try:
             miniBatchSize = int(self.batchSizeInput.get())
             self.trainer.setMiniBatchSize(miniBatchSize)
@@ -174,7 +178,11 @@ class testingGUI:
         if self.trainer.getNetwork().getStructure() == []:
             self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
             return
-
+        
+        if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
+            self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
+            return
+        
         self.__confusionMatrix = np.random.randint(0,10000,(10,10))
         self.__drawConfusionMatrix()
     
