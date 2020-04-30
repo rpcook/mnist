@@ -12,7 +12,6 @@ from struct import unpack
 import numpy as np
 import re
 import time
-from PIL import Image, ImageTk
 
 class testingGUI:
     def __init__(self, master):
@@ -97,30 +96,30 @@ class testingGUI:
             cc.create_text((i+1.5)*gd,gd*0.7, text=str(i))
             cc.create_text(gd*0.7,(i+1.5)*gd, text=str(i), angle=90)
         
-        cellColour = [['#ff0000' for x in range(10)] for x in range(10)] 
-        for i in range(10):
-            cellColour[i][i] = '#00ff00'
-        
         if np.any(cm):
-            gridAlpha = np.ones((10,10)) # TODO improve this
+            cellColour = [['#' for x in range(10)] for x in range(10)] 
+            for i in range(10):
+                totalActual = sum(cm[i])
+                for j in range(10):
+                    if i == j:
+                        cellHighlight = 10 * cm[i][j] / totalActual
+                    else:
+                        cellHighlight = 100 * cm[i][j] / totalActual
+                    brightness = 255-min(int(10*(cellHighlight**1.4)),255)
+                    hexValue = '%0.2X' % abs(brightness)
+                    if i == j:
+                        cellColour[i][j] = '#' + hexValue + 'ff' + hexValue
+                    else:
+                        cellColour[i][j] = '#' + 'ff' + hexValue + hexValue
         else:
-            gridAlpha = np.zeros((10,10))
+            cellColour = [['#ffffff' for x in range(10)] for x in range(10)] 
         
         for i in range(10):
             for j in range(10):
-                self.__creat_rectangle_alpha((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j], alpha=gridAlpha[i][j])
+                self.confusionCanvas.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
                 if np.any(cm):
                     cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=str(cm[i][j]))
     
-    def __creat_rectangle_alpha(self, x1, y1, x2, y2, **kwargs):
-        alpha = int(kwargs.pop('alpha') * 255)
-        fill = kwargs.pop('fill')
-        fill = root.winfo_rgb(fill) + (alpha,)
-        image = Image.new('RGBA', (x2-x1, y2-y1), fill)
-        self.__images.append(ImageTk.PhotoImage(image))
-        self.confusionCanvas.create_image(x1, y1, image=self.__images[-1], anchor='nw')
-        self.confusionCanvas.create_rectangle(x1, y1, x2, y2, fill='')
-
     def __trainNetwork(self):
         self.__clearLog()
         if self.trainer.getNetwork().getStructure() == []:
@@ -200,7 +199,9 @@ class testingGUI:
             self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
             return
         
-        self.__confusionMatrix = np.random.randint(0,10000,(10,10))
+        self.__confusionMatrix = np.random.randint(0,1000,(10,10))
+        for i in range(10):
+            self.__confusionMatrix[i][i] = np.random.randint(0,10000)
         self.__drawConfusionMatrix()
     
     def __trainAndEvaluateNetwork(self):
