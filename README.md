@@ -3,7 +3,7 @@ Ground-up neural-network to classify MNIST handwritten digits, not bleeding edge
 
 ## Dependencies
 - Python 3.x
-- Python libraries: numpy, Pillow
+- Python libraries: numpy
 - MNIST database from http://yann.lecun.com/exdb/mnist/ (plus uncompress) in local folder to code
 
 ## .nn file format
