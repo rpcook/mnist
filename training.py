@@ -12,6 +12,7 @@ from struct import unpack
 import numpy as np
 import re
 import time
+import mnist
 
 class testingGUI:
     def __init__(self, master):
@@ -79,12 +80,13 @@ class testingGUI:
         self.confusionCanvas.grid(row=2, column=3, rowspan=9, columnspan=2)
         
         self.trainer = bp.trainer()
+        self.__mnistTestData = False
         self.__confusionMatrix = np.zeros((10,10))
         self.__images = []
         
         self.__drawConfusionMatrix()
     
-    def __drawConfusionMatrix(self):
+    def __drawConfusionMatrix(self, drawNumbers=True):
         cm = self.__confusionMatrix
         cc = self.confusionCanvas
         gd = self.__gridSize
@@ -101,7 +103,9 @@ class testingGUI:
             for i in range(10):
                 totalActual = sum(cm[i])
                 for j in range(10):
-                    if i == j:
+                    if totalActual == 0:
+                        cellHighlight = 0
+                    elif i == j:
                         cellHighlight = 10 * cm[i][j] / totalActual
                     else:
                         cellHighlight = 100 * cm[i][j] / totalActual
@@ -117,8 +121,9 @@ class testingGUI:
         for i in range(10):
             for j in range(10):
                 self.confusionCanvas.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
-                if np.any(cm):
-                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=str(cm[i][j]))
+                if np.any(cm) and drawNumbers:
+                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(cm[i][j], 'n'))
+        root.update()
     
     def __trainNetwork(self):
         self.__clearLog()
@@ -171,15 +176,15 @@ class testingGUI:
         self.__writeToLog('Verifying back-propagation trainer...done.\n\n')
         
         if not self.trainer.checkMNISTload():
-            self.__writeToLog('Loading MNIST database to memory...')
-            self.__updateTrainingProgressBar(10)
+            self.__writeToLog('Loading MNIST training database to memory...')
+            self.__updateTrainingProgressBar(1)
             self.trainer.loadMNIST()
             self.__writeToLog('done.\n')
             self.__updateTrainingProgressBar(100)
             time.sleep(0.2)
             self.trainingProgressBar['value'] = 0
         else:
-            self.__writeToLog('MNIST database already loaded into memory.\n')
+            self.__writeToLog('MNIST training database already loaded into memory.\n')
     
     def __updateTrainingProgressBar(self, progress):
         self.trainingProgressBar['value'] = progress
@@ -191,17 +196,52 @@ class testingGUI:
     
     def __evaluateNetwork(self):
         self.__clearLog()
+        
         if self.trainer.getNetwork().getStructure() == []:
             self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
             return
         
+        self.__writeToLog('Verifying network structure...\n')
+        self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+
         if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
             self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
             return
         
-        self.__confusionMatrix = np.random.randint(0,1000,(10,10))
+        self.__writeToLog('Verifying network structure...done.\n\n')
+
+        if not self.__mnistTestData:
+            self.__writeToLog('Loading MNIST testing database to memory...')
+            self.__mnistTestData = mnist.database(True)
+            self.__writeToLog('done.\n')
+        else:
+            self.__writeToLog('MNIST testing database already loaded into memory.\n\n')
+        
+        self.__confusionMatrix = np.zeros((10,10))
+        
+        self.__writeToLog('Evaluating neural network against MNIST testing database...')
+        
+        network = self.trainer.getNetwork()
+        for i in range(10000):
+            if i%100==0:
+                self.__updateEvaluateProgressBar(i/100)
+            if i%100==0:
+                self.__drawConfusionMatrix(False)
+            testImage, actualLabel = self.__mnistTestData.getData(i, 'test')
+            network.setNeuronActivation(0, range(784), testImage.reshape(784))
+            network.evaluate()
+            networkPrediction = np.argmax(network.getNeuronActivation(-1, range(10)))
+            self.__confusionMatrix[actualLabel][networkPrediction] += 1
+
+        totalCorrectPredictions = 0
         for i in range(10):
-            self.__confusionMatrix[i][i] = np.random.randint(0,10000)
+            totalCorrectPredictions += self.__confusionMatrix[i][i]
+        networkAccuracy = totalCorrectPredictions / 10000
+
+        self.__writeToLog('done.\n\n')
+        self.__updateEvaluateProgressBar(0)
+        
+        self.performanceLabelContent.set('Overall network accuracy: {:.2%}'.format(networkAccuracy))
         self.__drawConfusionMatrix()
     
     def __trainAndEvaluateNetwork(self):
@@ -213,6 +253,7 @@ class testingGUI:
         self.messageLog.insert(tk.END, message)
         self.messageLog.configure(state='disabled')
         self.messageLog.yview(tk.END)
+        root.update()
         
     def __clearLog(self):
         self.messageLog.configure(state='normal')
@@ -220,7 +261,6 @@ class testingGUI:
         self.messageLog.configure(state='disabled')
     
     def __initialiseNetwork(self):
-        #try:
         hiddenLayersStr = re.findall('[0-9]+', self.structureInput.get())
         structure = [28*28]
         for layerStr in hiddenLayersStr:
