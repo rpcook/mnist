@@ -11,6 +11,7 @@ class trainer:
         self.__miniBatchSize = []
         self.__inputSize = []
         self.__scaleFactor = []
+        self.__nIterations = []
     
     def initialiseNetwork(self, structure, *seed):
         self.network.setStructure(structure)
@@ -39,6 +40,12 @@ class trainer:
     
     def getInputSize(self):
         return self.__inputSize
+    
+    def setIterations(self, nIterations):
+        self.__nIterations = nIterations
+    
+    def getIterations(self):
+        return self.__nIterations
     
     def setGradientScaleFactor(self, scaleFactor):
         self.__scaleFactor = scaleFactor
