@@ -44,25 +44,30 @@ class testingGUI:
         self.totalSizeInput.insert(0, '60000')
         self.totalSizeInput.grid(row=5, column=1, sticky='W')
         
-        tk.Label(text='Gradient descent scale-factor:').grid(row=6, column=0)
+        tk.Label(text='Iterations through training dataset:').grid(row=6, column=0)
+        self.iterationInput = tk.Entry()
+        self.iterationInput.insert(0, '1')
+        self.iterationInput.grid(row=6, column=1, sticky='W')
+        
+        tk.Label(text='Gradient descent scale-factor:').grid(row=7, column=0)
         self.scaleFactorInput = tk.Entry()
         self.scaleFactorInput.insert(0, '1.0')
-        self.scaleFactorInput.grid(row=6, column=1, sticky='W')
+        self.scaleFactorInput.grid(row=7, column=1, sticky='W')
         
-        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=7, column=0)
-        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=7, column=1)
+        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=8, column=0)
+        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=8, column=1)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
-        self.trainingProgressBar.grid(row=8, column=0, columnspan=2, sticky='EW')
+        self.trainingProgressBar.grid(row=9, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=9, column=0)
-        tk.Button(text='Save Network & Log').grid(row=9, column=1)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=10, column=0)
+        tk.Button(text='Save Network & Log').grid(row=10, column=1)
         
         self.messageLog = scrolledtext.ScrolledText(height=10, width=70, wrap=tk.WORD, state='disabled')
-        self.messageLog.grid(row=10, column=0, columnspan=2)
+        self.messageLog.grid(row=11, column=0, columnspan=2)
         
-        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=11, sticky='NS')
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=12, sticky='NS')
         
         tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
@@ -77,7 +82,7 @@ class testingGUI:
         
         self.__gridSize = 36
         self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
-        self.confusionCanvas.grid(row=2, column=3, rowspan=9, columnspan=2)
+        self.confusionCanvas.grid(row=2, column=3, rowspan=10, columnspan=2)
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
@@ -141,21 +146,31 @@ class testingGUI:
         except:
             self.__writeToLog('ERROR: Mini-batch size must be an integer.\n')
             return
-        if miniBatchSize > 30000:
-            self.__writeToLog('ERROR: Mini-batch size must be less than 30,000.\n')
+        if miniBatchSize > 60000:
+            self.__writeToLog('ERROR: Mini-batch size must be less than 60,000.\n')
             return
         
         try:
             inputSize = int(self.totalSizeInput.get())
             self.trainer.setInputSize(inputSize)
         except:
-            self.__writeToLog('ERROR: Total images to use size must be an integer.\n')
+            self.__writeToLog('ERROR: Total images to use must be an integer.\n')
             return
         if inputSize > 60000:
-            self.__writeToLog('ERROR: Total images to use size must be less than 60,000.\n')
+            self.__writeToLog('ERROR: Total images to use must be less than 60,000.\n')
             return
         if inputSize < miniBatchSize:
             self.__writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
+            return
+        
+        try:
+            nIterations = int(self.iterationInput.get())
+            self.trainer.setIterations(nIterations)
+        except:
+            self.__writeToLog('ERROR: Iterations through training dataset must be an integer.\n')
+            return
+        if not nIterations > 0:
+            self.__writeToLog('ERROR: Iterations through training dataset be greater than 0.\n')
             return
         
         try:
@@ -172,6 +187,7 @@ class testingGUI:
         self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
         self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
         self.__writeToLog('Total images to use is {}\n'.format(inputSize))
+        self.__writeToLog('Iterations through training dataset is {}\n'.format(nIterations))
         self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
         self.__writeToLog('Verifying back-propagation trainer...done.\n\n')
         
