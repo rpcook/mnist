@@ -64,7 +64,7 @@ class testingGUI:
         tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=10, column=0)
         tk.Button(text='Save Network & Log').grid(row=10, column=1)
         
-        self.messageLog = scrolledtext.ScrolledText(height=10, width=70, wrap=tk.WORD, state='disabled')
+        self.messageLog = scrolledtext.ScrolledText(height=12, width=70, wrap=tk.WORD, state='disabled', font=('Arial',9))
         self.messageLog.grid(row=11, column=0, columnspan=2)
         
         ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=12, sticky='NS')
@@ -80,7 +80,7 @@ class testingGUI:
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=1, column=4)
         
-        self.__gridSize = 36
+        self.__gridSize = 40
         self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
         self.confusionCanvas.grid(row=2, column=3, rowspan=10, columnspan=2)
         
@@ -130,7 +130,7 @@ class testingGUI:
                     cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(cm[i][j], 'n'))
         root.update()
     
-    def __trainNetwork(self):
+    def __checkUserInputForTrainer(self):
         self.__clearLog()
         if self.trainer.getNetwork().getStructure() == []:
             self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
@@ -185,23 +185,65 @@ class testingGUI:
         
         self.__writeToLog('Verifying back-propagation trainer...\n')
         self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
-        self.__writeToLog('Mini-batch size is {}\n'.format(miniBatchSize))
-        self.__writeToLog('Total images to use is {}\n'.format(inputSize))
-        self.__writeToLog('Iterations through training dataset is {}\n'.format(nIterations))
+        self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
+        self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
+        self.__writeToLog('Iterations through training dataset is {:,}\n'.format(nIterations))
+        self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
         self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
         self.__writeToLog('Verifying back-propagation trainer...done.\n\n')
         
+        return True
+    
+    def __loadMNISTdatabase(self):
         if not self.trainer.checkMNISTload():
             self.__writeToLog('Loading MNIST training database to memory...')
             self.__updateTrainingProgressBar(1)
             self.trainer.loadMNIST()
-            self.__writeToLog('done.\n')
+            self.__writeToLog('done.\n\n')
             self.__updateTrainingProgressBar(100)
             time.sleep(0.2)
             self.trainingProgressBar['value'] = 0
         else:
-            self.__writeToLog('MNIST training database already loaded into memory.\n')
+            self.__writeToLog('MNIST training database already loaded into memory.\n\n')
     
+    def __trainNetwork(self):
+        if not self.__checkUserInputForTrainer():
+            return
+        self.__loadMNISTdatabase()
+        
+        trainingIndices = list(range(60000))
+        
+        if self.seedCheckVar.get() == 0:
+            try:
+                np.random.seed(int(self.seedInput.get()))
+            except:
+                self.__writeToLog('Random seed must be an integer, ignoring entered value.\n')
+                np.random.seed()
+        else:
+            np.random.seed()
+        
+        startTime = time.time()
+        
+        for iteration in range(self.trainer.getIterations()):
+            np.random.shuffle(trainingIndices)
+            lastProgressUpdate = 0
+            self.__writeToLog('Executing training iteration {:n} of {:n}...'.format(iteration+1,self.trainer.getIterations()))
+            for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
+                # TODO Pool-based threading at mini-batch scope
+                for trainingExample in range(self.trainer.getMiniBatchSize()):
+                    currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
+                    # TODO: keep this progress bar working with Pool
+                    percentProgress = currentIndex / (int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())*self.trainer.getMiniBatchSize())
+                    if percentProgress > lastProgressUpdate + 0.005:
+                        self.__updateTrainingProgressBar(percentProgress*100)
+                        lastProgressUpdate = percentProgress
+                    trainingImage, actualLabel = self.trainer.mnistData.getData(trainingIndices[currentIndex], 'training')
+                    exampleCost = self.trainer.cost(trainingImage.reshape(784), actualLabel)
+                    # TODO some actual back propagation
+            self.__writeToLog('done.\n')
+        self.__updateTrainingProgressBar(0)
+        self.__writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
+        
     def __updateTrainingProgressBar(self, progress):
         self.trainingProgressBar['value'] = progress
         root.update()
@@ -211,8 +253,6 @@ class testingGUI:
         root.update()
     
     def __evaluateNetwork(self):
-        self.__clearLog()
-        
         if self.trainer.getNetwork().getStructure() == []:
             self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
             return
@@ -241,7 +281,7 @@ class testingGUI:
         for i in range(10000):
             if i%100==0:
                 self.__updateEvaluateProgressBar(i/100)
-            if i%100==0:
+            if i%300==0:
                 self.__drawConfusionMatrix(False)
             testImage, actualLabel = self.__mnistTestData.getData(i, 'test')
             network.setNeuronActivation(0, range(784), testImage.reshape(784))
