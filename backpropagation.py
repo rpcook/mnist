@@ -12,7 +12,7 @@ class trainer:
         self.__inputSize = []
         self.__scaleFactor = []
         self.__nIterations = []
-    
+        
     def initialiseNetwork(self, structure, *seed):
         self.network.setStructure(structure)
         if len(seed[0])==0:
@@ -63,4 +63,6 @@ class trainer:
     def cost(self, inputLayer, desiredOutput):
         self.network.setNeuronActivation(0, range(self.network.getStructure()[0]), inputLayer)
         self.network.evaluate()
-        return np.sum((self.network.getNeuronActivation(self.network.getStructure()[-1])-desiredOutput)**2)
+        target = np.zeros(self.network.getStructure()[-1])
+        target[desiredOutput] = 1
+        return np.sum((self.network.getNeuronActivation(len(self.network.getStructure())-1, range(self.network.getStructure()[-1]))-target)**2)
