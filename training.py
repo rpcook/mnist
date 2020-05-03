@@ -64,10 +64,14 @@ class testingGUI:
         tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=10, column=0)
         tk.Button(text='Save Network & Log').grid(row=10, column=1)
         
+        self.verboseLog = tk.IntVar()
+        self.verboseLog.set(1)
+        tk.Checkbutton(text='Verbose logging', variable=self.verboseLog).grid(row=11, column=0, sticky='W')
+
         self.messageLog = scrolledtext.ScrolledText(height=12, width=70, wrap=tk.WORD, state='disabled', font=('Arial',9))
-        self.messageLog.grid(row=11, column=0, columnspan=2)
+        self.messageLog.grid(row=12, column=0, columnspan=2)
         
-        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=12, sticky='NS')
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=13, sticky='NS')
         
         tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
@@ -82,7 +86,7 @@ class testingGUI:
         
         self.__gridSize = 40
         self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
-        self.confusionCanvas.grid(row=2, column=3, rowspan=10, columnspan=2)
+        self.confusionCanvas.grid(row=2, column=3, rowspan=11, columnspan=2)
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
@@ -183,14 +187,16 @@ class testingGUI:
             self.__writeToLog('ERROR: Gradient descent scale-factor size must be positive.\n')
             return
         
-        self.__writeToLog('Verifying back-propagation trainer...\n')
-        self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
-        self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
-        self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
-        self.__writeToLog('Iterations through training dataset is {:,}\n'.format(nIterations))
-        self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
-        self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
-        self.__writeToLog('Verifying back-propagation trainer...done.\n\n')
+        self.__writeToLog('Verifying back-propagation trainer...')
+        if self.verboseLog.get():
+            self.__writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+            self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
+            self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
+            self.__writeToLog('Iterations through training dataset is {:,}\n'.format(nIterations))
+            self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
+            self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
+            self.__writeToLog('Verifying back-propagation trainer...')
+        self.__writeToLog('done.\n\n')
         
         return True
     
@@ -257,19 +263,23 @@ class testingGUI:
             self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
             return
         
-        self.__writeToLog('Verifying network structure...\n')
-        self.__writeToLog('Network structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+        self.__writeToLog('Verifying network structure...')
+        if self.verboseLog.get():
+            self.__writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
 
         if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
             self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
             return
         
-        self.__writeToLog('Verifying network structure...done.\n\n')
+        if self.verboseLog.get():
+            self.__writeToLog('Verifying network structure...')
+        self.__writeToLog('done.\n\n')
+            
 
         if not self.__mnistTestData:
             self.__writeToLog('Loading MNIST testing database to memory...')
             self.__mnistTestData = mnist.database(True)
-            self.__writeToLog('done.\n')
+            self.__writeToLog('done.\n\n')
         else:
             self.__writeToLog('MNIST testing database already loaded into memory.\n\n')
         
