@@ -10,12 +10,15 @@ def sum_square(number):
         s += i * i
     return s
 
-def updater(*a):
-    print('stuff')
-
 if __name__ == '__main__':
+    import backpropagation as bp
+    import neuralnetwork as nn
+    
     numbers = range(10000)
     someList = list(range(10))
+    
+    t=bp.trainer()
+    n=nn.network()
     
     np.random.seed(0)
     
@@ -42,4 +45,4 @@ if __name__ == '__main__':
     
         print(f"Processing {len(numbers)} numbers took {end_time} time using multiprocessing.")
         
-        # print(result.get()[0:5])
+        print(result.get()[0:5])
