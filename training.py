@@ -70,6 +70,8 @@ class testingGUI:
 
         self.messageLog = scrolledtext.ScrolledText(height=12, width=70, wrap=tk.WORD, state='disabled', font=('Arial',9))
         self.messageLog.grid(row=12, column=0, columnspan=2)
+        self.messageLog.tag_config('error', foreground='red')
+        self.messageLog.tag_config('warning', foreground='orange')
         
         ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=13, sticky='NS')
         
@@ -92,6 +94,7 @@ class testingGUI:
         self.__mnistTestData = False
         self.__confusionMatrix = np.zeros((10,10))
         self.__images = []
+        self.__trainingIndices = list(range(60000))
         
         self.__drawConfusionMatrix()
     
@@ -217,13 +220,12 @@ class testingGUI:
             return
         self.__loadMNISTdatabase()
         
-        trainingIndices = list(range(60000))
         
         if self.seedCheckVar.get() == 0:
             try:
                 np.random.seed(int(self.seedInput.get()))
             except:
-                self.__writeToLog('Random seed must be an integer, ignoring entered value.\n')
+                self.__writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
                 np.random.seed()
         else:
             np.random.seed()
@@ -231,11 +233,14 @@ class testingGUI:
         startTime = time.time()
         
         for iteration in range(self.trainer.getIterations()):
-            np.random.shuffle(trainingIndices)
+            np.random.shuffle(self.__trainingIndices)
             lastProgressUpdate = 0
             self.__writeToLog('Executing training iteration {:n} of {:n}...'.format(iteration+1,self.trainer.getIterations()))
             for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
                 # TODO Pool-based threading at mini-batch scope
+                
+                # print(miniBatch)
+                
                 for trainingExample in range(self.trainer.getMiniBatchSize()):
                     currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
                     # TODO: keep this progress bar working with Pool
@@ -243,13 +248,20 @@ class testingGUI:
                     if percentProgress > lastProgressUpdate + 0.005:
                         self.__updateTrainingProgressBar(percentProgress*100)
                         lastProgressUpdate = percentProgress
-                    trainingImage, actualLabel = self.trainer.mnistData.getData(trainingIndices[currentIndex], 'training')
+                    trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[currentIndex], 'training')
                     exampleCost = self.trainer.cost(trainingImage.reshape(784), actualLabel)
                     # TODO some actual back propagation
             self.__writeToLog('done.\n')
         self.__updateTrainingProgressBar(0)
         self.__writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
-        
+    
+    def __trainingWorker(self, index):
+        network = self.trainer.getNetwork()
+        trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[index], 'training')
+        network.setNeuronActivation(0, range(784), trainingImage.reshape(784))
+        network.evaluate()
+        return index
+    
     def __updateTrainingProgressBar(self, progress):
         self.trainingProgressBar['value'] = progress
         root.update()
@@ -274,7 +286,6 @@ class testingGUI:
         if self.verboseLog.get():
             self.__writeToLog('Verifying network structure...')
         self.__writeToLog('done.\n\n')
-            
 
         if not self.__mnistTestData:
             self.__writeToLog('Loading MNIST testing database to memory...')
@@ -316,7 +327,17 @@ class testingGUI:
     
     def __writeToLog(self, message):
         self.messageLog.configure(state='normal')
-        self.messageLog.insert(tk.END, message)
+        if len(message)>7:
+            if message[0:5]=='ERROR':
+                self.messageLog.insert(tk.END, message[0:5], 'error')
+                self.messageLog.insert(tk.END, message[5:])
+            elif message[0:7]=='WARNING':
+                self.messageLog.insert(tk.END, message[0:7], 'warning')
+                self.messageLog.insert(tk.END, message[7:])
+            else:
+                self.messageLog.insert(tk.END, message)
+        else:
+            self.messageLog.insert(tk.END, message)
         self.messageLog.configure(state='disabled')
         self.messageLog.yview(tk.END)
         root.update()
@@ -337,7 +358,7 @@ class testingGUI:
             try:
                 seed.append(int(self.seedInput.get()))
             except:
-                self.__writeToLog('Random seed must be an integer, ignoring entered value.\n')
+                self.__writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
         self.trainer.initialiseNetwork(structure, seed)
         self.__writeToLog('Initialised random network with structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] +'.\n')
     
