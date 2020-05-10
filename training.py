@@ -73,7 +73,10 @@ class testingGUI:
         self.messageLog.tag_config('error', foreground='red')
         self.messageLog.tag_config('warning', foreground='orange')
         
-        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=13, sticky='NS')
+        self.graphingCanvas = tk.Canvas(width=510, height=150)
+        self.graphingCanvas.grid(row=13, column=0, columnspan=2)
+        
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=14, sticky='NS')
         
         tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
@@ -86,17 +89,47 @@ class testingGUI:
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=1, column=4)
         
-        self.__gridSize = 40
+        self.__gridSize = 50
         self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
-        self.confusionCanvas.grid(row=2, column=3, rowspan=11, columnspan=2)
+        self.confusionCanvas.grid(row=2, column=3, rowspan=12, columnspan=2)
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
         self.__confusionMatrix = np.zeros((10,10))
         self.__images = []
         self.__trainingIndices = list(range(60000))
+        self.__costHistory = []
         
         self.__drawConfusionMatrix()
+        self.__drawCostGraph()
+        
+    def __drawCostGraph(self):
+        gc = self.graphingCanvas
+        gc.delete('all')
+        gc.create_text(15,75,angle=90,text='Cost')
+        boldLine = '#aaaaaa'
+        softLine = '#dddddd'
+        costLine = '#0000ff'
+        if len(self.__costHistory) < 2:
+            numMajorGrids = 1
+        else:
+            numMajorGrids = int(np.ceil(0.5-np.log10(min(self.__costHistory))))
+            
+        gc.create_line(30,8,30,145)
+        for i in range(numMajorGrids+1):
+            gc.create_line(31, 8+i*(136/numMajorGrids), 500, 8+i*(136/numMajorGrids), fill=boldLine)
+        for i in range(numMajorGrids):
+            for j in range(2,10):
+                yPos = 8+(i+1-np.log10(j))*(136/numMajorGrids)
+                gc.create_line(31, yPos, 500, yPos, fill=softLine)
+                
+        if len(self.__costHistory) > 1:
+            for i in range(len(self.__costHistory)-1):
+                yPosStart = 8 + 136*((1 - np.log10(self.__costHistory[i])) / numMajorGrids)
+                yPosStop  = 8 + 136*((1 - np.log10(self.__costHistory[i+1])) / numMajorGrids)
+                gc.create_line(31+i*(470/(len(self.__costHistory)-1)), yPosStart, 31+(i+1)*(470/(len(self.__costHistory)-1)), yPosStop, fill=costLine)
+                # print(self.__costHistory[i], y)
+        root.update()
     
     def __drawConfusionMatrix(self, drawNumbers=True):
         cm = self.__confusionMatrix
@@ -216,10 +249,12 @@ class testingGUI:
             self.__writeToLog('MNIST training database already loaded into memory.\n\n')
     
     def __trainNetwork(self):
+        self.__costHistory = []
+        self.__drawCostGraph()
+        
         if not self.__checkUserInputForTrainer():
             return
         self.__loadMNISTdatabase()
-        
         
         if self.seedCheckVar.get() == 0:
             try:
@@ -238,8 +273,7 @@ class testingGUI:
             self.__writeToLog('Executing training iteration {:n} of {:n}...'.format(iteration+1,self.trainer.getIterations()))
             for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
                 # TODO Pool-based threading at mini-batch scope
-                
-                # print(miniBatch)
+                totalCost = 0
                 
                 for trainingExample in range(self.trainer.getMiniBatchSize()):
                     currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
@@ -250,7 +284,11 @@ class testingGUI:
                         lastProgressUpdate = percentProgress
                     trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[currentIndex], 'training')
                     exampleCost = self.trainer.cost(trainingImage.reshape(784), actualLabel)
+                    totalCost += exampleCost
                     # TODO some actual back propagation
+                
+                self.__costHistory.append(totalCost / self.trainer.getMiniBatchSize())
+            self.__drawCostGraph()
             self.__writeToLog('done.\n')
         self.__updateTrainingProgressBar(0)
         self.__writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
