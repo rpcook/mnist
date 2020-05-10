@@ -113,8 +113,8 @@ class testingGUI:
         if len(self.__costHistory) < 2:
             numMajorGrids = 1
         else:
-            numMajorGrids = int(np.ceil(0.5-np.log10(min(self.__costHistory))))
-            
+            numMajorGrids = int(np.ceil(np.log10(10/min(self.__costHistory))))
+        
         gc.create_line(30,8,30,145)
         for i in range(numMajorGrids+1):
             gc.create_line(31, 8+i*(136/numMajorGrids), 500, 8+i*(136/numMajorGrids), fill=boldLine)
@@ -128,7 +128,6 @@ class testingGUI:
                 yPosStart = 8 + 136*((1 - np.log10(self.__costHistory[i])) / numMajorGrids)
                 yPosStop  = 8 + 136*((1 - np.log10(self.__costHistory[i+1])) / numMajorGrids)
                 gc.create_line(31+i*(470/(len(self.__costHistory)-1)), yPosStart, 31+(i+1)*(470/(len(self.__costHistory)-1)), yPosStop, fill=costLine)
-                # print(self.__costHistory[i], y)
         root.update()
     
     def __drawConfusionMatrix(self, drawNumbers=True):
