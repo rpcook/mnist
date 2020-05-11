@@ -49,10 +49,10 @@ class testingGUI:
         self.iterationInput.insert(0, '1')
         self.iterationInput.grid(row=6, column=1, sticky='W')
         
-        tk.Label(text='Gradient descent scale-factor:').grid(row=7, column=0)
-        self.scaleFactorInput = tk.Entry()
-        self.scaleFactorInput.insert(0, '1.0')
-        self.scaleFactorInput.grid(row=7, column=1, sticky='W')
+        tk.Label(text='Learning rate:').grid(row=7, column=0)
+        self.learningRateInput = tk.Entry()
+        self.learningRateInput.insert(0, '0.1')
+        self.learningRateInput.grid(row=7, column=1, sticky='W')
         
         tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=8, column=0)
         tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=8, column=1)
@@ -213,13 +213,13 @@ class testingGUI:
             return
         
         try:
-            gradientScaleFactor = float(self.scaleFactorInput.get())
-            self.trainer.setGradientScaleFactor(gradientScaleFactor)
+            learningRate = float(self.learningRateInput.get())
+            self.trainer.setLearningRate(learningRate)
         except:
-            self.__writeToLog('ERROR: Gradient descent scale-factor size must be a real number.\n')
+            self.__writeToLog('ERROR: Learning rate must be a real number.\n')
             return
-        if not gradientScaleFactor > 0:
-            self.__writeToLog('ERROR: Gradient descent scale-factor size must be positive.\n')
+        if not learningRate > 0:
+            self.__writeToLog('ERROR: Learning rate must be positive.\n')
             return
         
         self.__writeToLog('Verifying back-propagation trainer...')
@@ -229,7 +229,7 @@ class testingGUI:
             self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
             self.__writeToLog('Iterations through training dataset is {:,}\n'.format(nIterations))
             self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
-            self.__writeToLog('Gradient descent scale-factor is {}\n'.format(gradientScaleFactor))
+            self.__writeToLog('Learning rate is {}\n'.format(learningRate))
             self.__writeToLog('Verifying back-propagation trainer...')
         self.__writeToLog('done.\n\n')
         
