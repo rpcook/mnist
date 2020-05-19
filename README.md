@@ -36,3 +36,8 @@ Binary data, little endian
 | ... | ... | ... |
 | float | 4 | bias for last neuron in layer 1 |
 | float | 4\*x | above structure (weights, then biases) follows for each subsquent layer |
+
+## Inspiration / References
+- 3Blue1Brown's excellent series on Neural Networks (my original motivation to start this project): https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi
+- Standford University's Andrew Ng's full course on Machine Learning: https://www.youtube.com/playlist?list=PLLssT5z_DsK-h9vYZkQkYNWcItqhlRJLN
+- Cambridge University's Mike Gordon's write up of going through a similar process: https://www.cl.cam.ac.uk/archive/mjcg/plans/Backpropagation.pdf
