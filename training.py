@@ -44,10 +44,10 @@ class testingGUI:
         self.totalSizeInput.insert(0, '60000')
         self.totalSizeInput.grid(row=5, column=1, sticky='W')
         
-        tk.Label(text='Iterations through training dataset:').grid(row=6, column=0)
-        self.iterationInput = tk.Entry()
-        self.iterationInput.insert(0, '1')
-        self.iterationInput.grid(row=6, column=1, sticky='W')
+        tk.Label(text='Number of training epochs:').grid(row=6, column=0)
+        self.epochInput = tk.Entry()
+        self.epochInput.insert(0, '1')
+        self.epochInput.grid(row=6, column=1, sticky='W')
         
         tk.Label(text='Learning rate:').grid(row=7, column=0)
         self.learningRateInput = tk.Entry()
@@ -212,13 +212,13 @@ class testingGUI:
             return
         
         try:
-            nIterations = int(self.iterationInput.get())
-            self.trainer.setIterations(nIterations)
+            nEpochs = int(self.epochInput.get())
+            self.trainer.setEpochs(nEpochs)
         except:
-            self.__writeToLog('ERROR: Iterations through training dataset must be an integer.\n')
+            self.__writeToLog('ERROR: Number of training epochs must be an integer.\n')
             return
-        if not nIterations > 0:
-            self.__writeToLog('ERROR: Iterations through training dataset be greater than 0.\n')
+        if not nEpochs > 0:
+            self.__writeToLog('ERROR: Number of training epochs must be greater than 0.\n')
             return
         
         try:
@@ -238,7 +238,7 @@ class testingGUI:
             self.__writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
             self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
             self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
-            self.__writeToLog('Iterations through training dataset is {:,}\n'.format(nIterations))
+            self.__writeToLog('Number of training epochs is {:,}\n'.format(nEpochs))
             self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
             self.__writeToLog('Learning rate is {}\n'.format(learningRate))
             self.__writeToLog('Verifying back-propagation trainer...')
