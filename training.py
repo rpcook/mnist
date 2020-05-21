@@ -231,7 +231,15 @@ class testingGUI:
             self.__writeToLog('ERROR: Learning rate must be positive.\n')
             return
         
-        # TODO check regularisation parameter
+        try:
+            regularisationConst = float(self.regularisationConst.get())
+            self.trainer.setRegularisationConst(regularisationConst)
+        except:
+            self.__writeToLog('ERROR: Regularisation constant must be a real number.\n')
+            return
+        if not regularisationConst > 0:
+            self.__writeToLog('ERROR: Regularisation constant must be positive.\n')
+            return
         
         self.__writeToLog('Verifying back-propagation trainer...')
         if self.verboseLog.get():
@@ -239,8 +247,9 @@ class testingGUI:
             self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
             self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
             self.__writeToLog('Number of training epochs is {:,}\n'.format(nEpochs))
-            self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nIterations))
+            self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nEpochs))
             self.__writeToLog('Learning rate is {}\n'.format(learningRate))
+            self.__writeToLog('Regularisation constant is {}\n'.format(regularisationConst))
             self.__writeToLog('Verifying back-propagation trainer...')
         self.__writeToLog('done.\n\n')
         

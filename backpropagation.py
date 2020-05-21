@@ -11,7 +11,8 @@ class trainer:
         self.__miniBatchSize = []
         self.__inputSize = []
         self.__learningRate = []
-        self.__nIterations = []
+        self.__nEpochs = []
+        self.__regularisationConst = []
         
     def initialiseNetwork(self, structure, *seed):
         self.network.setStructure(structure)
@@ -41,17 +42,23 @@ class trainer:
     def getInputSize(self):
         return self.__inputSize
     
-    def setIterations(self, nIterations):
-        self.__nIterations = nIterations
+    def setEpochs(self, nEpochs):
+        self.__nEpochs = nEpochs
     
-    def getIterations(self):
-        return self.__nIterations
+    def getEpochs(self):
+        return self.__nEpochs
     
     def setLearningRate(self, learningRate):
         self.__learningRate = learningRate
     
     def getLearningRate(self):
         return self.__learningRate
+    
+    def setRegularisationConst(self, nEpochs):
+        self.__nEpochs = nEpochs
+    
+    def getRegularisationConst(self):
+        return self.__nEpochs
     
     def checkMNISTload(self):
         return self.__mnistLoaded
