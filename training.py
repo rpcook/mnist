@@ -237,7 +237,7 @@ class testingGUI:
         except:
             self.__writeToLog('ERROR: Regularisation constant must be a real number.\n')
             return
-        if not regularisationConst > 0:
+        if not regularisationConst >= 0:
             self.__writeToLog('ERROR: Regularisation constant must be positive.\n')
             return
         
@@ -286,7 +286,7 @@ class testingGUI:
         
         startTime = time.time()
         
-        for iteration in range(self.trainer.getIterations()):
+        for iteration in range(int(self.trainer.getEpochs())):
             np.random.shuffle(self.__trainingIndices)
             lastProgressUpdate = 0
             self.__writeToLog('Executing training iteration {:n} of {:n}...'.format(iteration+1,self.trainer.getIterations()))
