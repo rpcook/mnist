@@ -54,29 +54,37 @@ class testingGUI:
         self.learningRateInput.insert(0, '0.1')
         self.learningRateInput.grid(row=7, column=1, sticky='W')
         
-        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=8, column=0)
-        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=8, column=1)
+        tk.Label(text='Regularisation constant:').grid(row=8,column=0)
+        self.regularisationConst = tk.Entry()
+        self.regularisationConst.insert(0, '0.0')
+        self.regularisationConst.grid(row=8, column=1, sticky='W')
+        
+        tk.Button(text='Configure Grid Search', state='disabled').grid(row=9, column=0)
+        tk.Button(text='Run Grid Search', state='disabled').grid(row=9, column=1)
+        
+        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=10, column=0)
+        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=10, column=1)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
-        self.trainingProgressBar.grid(row=9, column=0, columnspan=2, sticky='EW')
+        self.trainingProgressBar.grid(row=11, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=10, column=0)
-        tk.Button(text='Save Network & Log').grid(row=10, column=1)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0)
+        tk.Button(text='Save Network & Log').grid(row=12, column=1)
         
         self.verboseLog = tk.IntVar()
         self.verboseLog.set(1)
-        tk.Checkbutton(text='Verbose logging', variable=self.verboseLog).grid(row=11, column=0, sticky='W')
+        tk.Checkbutton(text='Verbose logging', variable=self.verboseLog).grid(row=13, column=0, sticky='W')
 
         self.messageLog = scrolledtext.ScrolledText(height=12, width=70, wrap=tk.WORD, state='disabled', font=('Arial',9))
-        self.messageLog.grid(row=12, column=0, columnspan=2)
+        self.messageLog.grid(row=14, column=0, columnspan=2)
         self.messageLog.tag_config('error', foreground='red')
         self.messageLog.tag_config('warning', foreground='orange')
         
         self.graphingCanvas = tk.Canvas(width=510, height=150)
-        self.graphingCanvas.grid(row=13, column=0, columnspan=2)
+        self.graphingCanvas.grid(row=15, column=0, columnspan=2)
         
-        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=14, sticky='NS')
+        ttk.Separator(orient=tk.VERTICAL).grid(row=0, column=2, rowspan=16, sticky='NS')
         
         tk.Button(text='Evaluate Network\nPerformance', command=self.__evaluateNetwork).grid(row=0, column=3, rowspan=2)
 
@@ -89,9 +97,9 @@ class testingGUI:
         self.performanceLabel = tk.Label(textvariable=self.performanceLabelContent)
         self.performanceLabel.grid(row=1, column=4)
         
-        self.__gridSize = 50
+        self.__gridSize = 55
         self.confusionCanvas = tk.Canvas(width=11*self.__gridSize, height=11*self.__gridSize)
-        self.confusionCanvas.grid(row=2, column=3, rowspan=12, columnspan=2)
+        self.confusionCanvas.grid(row=2, column=3, rowspan=14, columnspan=2)
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
@@ -106,7 +114,7 @@ class testingGUI:
     def __drawCostGraph(self):
         gc = self.graphingCanvas
         gc.delete('all')
-        gc.create_text(15,75,angle=90,text='Cost')
+        gc.create_text(15,75,angle=90,text='Loss')
         boldLine = '#aaaaaa'
         softLine = '#dddddd'
         costLine = '#0000ff'
@@ -168,6 +176,7 @@ class testingGUI:
                 if np.any(cm) and drawNumbers:
                     cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(cm[i][j], 'n'))
         root.update()
+        # TODO tool-tips for examples
     
     def __checkUserInputForTrainer(self):
         self.__clearLog()
@@ -221,6 +230,8 @@ class testingGUI:
         if not learningRate > 0:
             self.__writeToLog('ERROR: Learning rate must be positive.\n')
             return
+        
+        # TODO check regularisation parameter
         
         self.__writeToLog('Verifying back-propagation trainer...')
         if self.verboseLog.get():
@@ -346,6 +357,7 @@ class testingGUI:
             network.evaluate()
             networkPrediction = np.argmax(network.getNeuronActivation(-1, range(10)))
             self.__confusionMatrix[actualLabel][networkPrediction] += 1
+            # TODO change this line to capture example ID
 
         totalCorrectPredictions = 0
         for i in range(10):
