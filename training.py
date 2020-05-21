@@ -10,7 +10,7 @@ import backpropagation as bp
 import neuralnetwork as nn
 from struct import unpack
 import numpy as np
-import re
+from re import findall
 import time
 import mnist
 
@@ -406,7 +406,7 @@ class testingGUI:
         self.messageLog.configure(state='disabled')
     
     def __initialiseNetwork(self):
-        hiddenLayersStr = re.findall('[0-9]+', self.structureInput.get())
+        hiddenLayersStr = findall('[0-9]+', self.structureInput.get())
         structure = [28*28]
         for layerStr in hiddenLayersStr:
             structure.append(int(layerStr))
