@@ -105,7 +105,6 @@ class testingGUI:
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
-        # self.__confusionMatrix = np.zeros((10,10))
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         self.__images = []
         self.__trainingIndices = list(range(60000))
@@ -184,9 +183,10 @@ class testingGUI:
             for j in range(10):
                 self.confusionCanvas.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
                 if (entriesInConfusionMatrix > 0) and drawNumbers:
-                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(len(cm[i][j]), 'n'))
+                    id_ = cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(len(cm[i][j]), 'n'))
+                    if len(cm[i][j]) > 0:
+                        CanvasTooltip(cc, id_, text=str(cm[i][j]).strip('[]'))
         root.update()
-        # TODO tool-tips for examples
     
     def __checkUserInputForTrainer(self):
         self.__clearLog()
@@ -299,14 +299,11 @@ class testingGUI:
         for iteration in range(int(self.trainer.getEpochs())):
             np.random.shuffle(self.__trainingIndices)
             lastProgressUpdate = 0
-            self.__writeToLog('Executing training iteration {:n} of {:n}...'.format(iteration+1,self.trainer.getIterations()))
+            self.__writeToLog('Executing training epoch {:n} of {:n}...'.format(iteration+1,self.trainer.getEpochs()))
             for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
-                # TODO Pool-based threading at mini-batch scope
                 totalCost = 0
-                
                 for trainingExample in range(self.trainer.getMiniBatchSize()):
                     currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
-                    # TODO: keep this progress bar working with Pool
                     percentProgress = currentIndex / (int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())*self.trainer.getMiniBatchSize())
                     if percentProgress > lastProgressUpdate + 0.005:
                         self.__updateTrainingProgressBar(percentProgress*100)
@@ -321,13 +318,6 @@ class testingGUI:
             self.__writeToLog('done.\n')
         self.__updateTrainingProgressBar(0)
         self.__writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
-    
-    def __trainingWorker(self, index):
-        network = self.trainer.getNetwork()
-        trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[index], 'training')
-        network.setNeuronActivation(0, range(784), trainingImage.reshape(784))
-        network.evaluate()
-        return index
     
     def __updateTrainingProgressBar(self, progress):
         self.trainingProgressBar['value'] = progress
@@ -376,9 +366,7 @@ class testingGUI:
             network.setNeuronActivation(0, range(784), testImage.reshape(784))
             network.evaluate()
             networkPrediction = np.argmax(network.getNeuronActivation(-1, range(10)))
-            # self.__confusionMatrix[actualLabel][networkPrediction] += 1
             self.__confusionMatrix[actualLabel][networkPrediction].append(i)
-            # TODO change this line to capture example ID
 
         totalCorrectPredictions = 0
         for i in range(10):
