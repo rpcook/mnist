@@ -13,6 +13,7 @@ import numpy as np
 from re import findall
 import time
 import mnist
+from Tooltip import CanvasTooltip
 
 class testingGUI:
     def __init__(self, master):
@@ -59,6 +60,7 @@ class testingGUI:
         self.regularisationConst.insert(0, '0.0')
         self.regularisationConst.grid(row=8, column=1, sticky='W')
         
+        # TODO: add functionality to these
         tk.Button(text='Configure Grid Search', state='disabled').grid(row=9, column=0)
         tk.Button(text='Run Grid Search', state='disabled').grid(row=9, column=1)
         
@@ -103,7 +105,8 @@ class testingGUI:
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
-        self.__confusionMatrix = np.zeros((10,10))
+        # self.__confusionMatrix = np.zeros((10,10))
+        self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         self.__images = []
         self.__trainingIndices = list(range(60000))
         self.__costHistory = []
@@ -150,17 +153,24 @@ class testingGUI:
             cc.create_text((i+1.5)*gd,gd*0.7, text=str(i))
             cc.create_text(gd*0.7,(i+1.5)*gd, text=str(i), angle=90)
         
-        if np.any(cm):
+        entriesInConfusionMatrix = 0
+        for i in range(10):
+            for j in range(10):
+                entriesInConfusionMatrix += len(cm[i][j])
+        
+        if entriesInConfusionMatrix > 0:
             cellColour = [['#' for x in range(10)] for x in range(10)] 
             for i in range(10):
-                totalActual = sum(cm[i])
+                totalActual = 0
+                for j in range(10):
+                    totalActual += len(cm[i][j])
                 for j in range(10):
                     if totalActual == 0:
                         cellHighlight = 0
                     elif i == j:
-                        cellHighlight = 10 * cm[i][j] / totalActual
+                        cellHighlight = 10 * len(cm[i][j]) / totalActual
                     else:
-                        cellHighlight = 100 * cm[i][j] / totalActual
+                        cellHighlight = 100 * len(cm[i][j]) / totalActual
                     brightness = 255-min(int(10*(cellHighlight**1.4)),255)
                     hexValue = '%0.2X' % abs(brightness)
                     if i == j:
@@ -173,8 +183,8 @@ class testingGUI:
         for i in range(10):
             for j in range(10):
                 self.confusionCanvas.create_rectangle((i+1)*gd,(j+1)*gd,(i+2)*gd,(j+2)*gd, fill=cellColour[i][j])
-                if np.any(cm) and drawNumbers:
-                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(cm[i][j], 'n'))
+                if (entriesInConfusionMatrix > 0) and drawNumbers:
+                    cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(len(cm[i][j]), 'n'))
         root.update()
         # TODO tool-tips for examples
     
@@ -351,7 +361,8 @@ class testingGUI:
         else:
             self.__writeToLog('MNIST testing database already loaded into memory.\n\n')
         
-        self.__confusionMatrix = np.zeros((10,10))
+        # self.__confusionMatrix = np.zeros((10,10))
+        self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         
         self.__writeToLog('Evaluating neural network against MNIST testing database...')
         
@@ -365,12 +376,13 @@ class testingGUI:
             network.setNeuronActivation(0, range(784), testImage.reshape(784))
             network.evaluate()
             networkPrediction = np.argmax(network.getNeuronActivation(-1, range(10)))
-            self.__confusionMatrix[actualLabel][networkPrediction] += 1
+            # self.__confusionMatrix[actualLabel][networkPrediction] += 1
+            self.__confusionMatrix[actualLabel][networkPrediction].append(i)
             # TODO change this line to capture example ID
 
         totalCorrectPredictions = 0
         for i in range(10):
-            totalCorrectPredictions += self.__confusionMatrix[i][i]
+            totalCorrectPredictions += len(self.__confusionMatrix[i][i])
         networkAccuracy = totalCorrectPredictions / 10000
 
         self.__writeToLog('done.\n\n')
