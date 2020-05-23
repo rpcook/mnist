@@ -54,11 +54,11 @@ class trainer:
     def getLearningRate(self):
         return self.__learningRate
     
-    def setRegularisationConst(self, nEpochs):
-        self.__nEpochs = nEpochs
+    def setRegularisationConst(self, regularisationConst):
+        self.__regularisationConst = regularisationConst
     
     def getRegularisationConst(self):
-        return self.__nEpochs
+        return self.__regularisationConst
     
     def checkMNISTload(self):
         return self.__mnistLoaded
