@@ -407,8 +407,14 @@ class testingGUI:
     
     def __initialiseNetwork(self):
         hiddenLayersStr = findall('[0-9]+', self.structureInput.get())
+        if len(hiddenLayersStr) > 253:
+            self.__writeToLog('ERROR: Network has too many hidden layers (number of hidden layers must be less than 253).\n')
+            return
         structure = [28*28]
         for layerStr in hiddenLayersStr:
+            if int(layerStr) > 65535:
+                self.__writeToLog('ERROR: Hidden layer size too large (neurons per layer must be less than 65,536).\n')
+                return
             structure.append(int(layerStr))
         structure.append(10)
         seed = []
