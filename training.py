@@ -185,7 +185,7 @@ class testingGUI:
                 if (entriesInConfusionMatrix > 0) and drawNumbers:
                     id_ = cc.create_text((i+1.5)*gd,(j+1.5)*gd, text=format(len(cm[i][j]), 'n'))
                     if len(cm[i][j]) > 0:
-                        CanvasTooltip(cc, id_, text=str(cm[i][j]).strip('[]'))
+                        CanvasTooltip(cc, id_, text=str(cm[i][j]).strip('[]'), wraplength=250+300*(len(cm[i][j])/1000))
         root.update()
     
     def __checkUserInputForTrainer(self):
