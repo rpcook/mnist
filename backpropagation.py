@@ -3,6 +3,8 @@
 import numpy as np
 import neuralnetwork as nn
 import mnist
+import time
+import userInteractivity as UI
 
 class trainer:
     def __init__(self):
@@ -23,6 +25,14 @@ class trainer:
         for i in range(len(structure)-1):
             self.network.setConnectionWeights(i+1, np.random.random((structure[i+1],structure[i]))*2-1)
             self.network.setNeuronBias(i+1, range(structure[i+1]), np.random.random(structure[i+1])*2-1)
+    
+    def run(self, **kwargs):        
+        self.UIelements = UI.elements(kwargs)
+        
+        for i in range(10):
+            time.sleep(0.3)
+            self.UIelements.writeToLog('huzzah iteration {}\n'.format(i))
+            self.UIelements.updateProgressBar(10*i)
     
     def setNetwork(self, network):
         self.network = network

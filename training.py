@@ -14,6 +14,7 @@ from re import findall
 import time
 import mnist
 from Tooltip import CanvasTooltip
+import userInteractivity as UI
 
 class testingGUI:
     def __init__(self, master):
@@ -109,11 +110,14 @@ class testingGUI:
         self.__images = []
         self.__trainingIndices = list(range(60000))
         self.__costHistory = []
+        self.UIelements = UI.elements({'rootWindow': root, \
+                                       'progressBarWidget': self.trainingProgressBar, \
+                                       'messageLog': self.messageLog})
         
         self.__drawConfusionMatrix()
-        self.__drawCostGraph()
+        self.__drawLossGraph()
         
-    def __drawCostGraph(self):
+    def __drawLossGraph(self):
         gc = self.graphingCanvas
         gc.delete('all')
         gc.create_text(15,75,angle=90,text='Loss')
@@ -191,95 +195,95 @@ class testingGUI:
     def __checkUserInputForTrainer(self):
         self.__clearLog()
         if self.trainer.getNetwork().getStructure() == []:
-            self.__writeToLog('ERROR: No network to train, intialise or load from file.\n')
+            self.UIelements.writeToLog('ERROR: No network to train, intialise or load from file.\n')
             return
         
         if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
-            self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
+            self.UIelements.writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
             return
         
         try:
             miniBatchSize = int(self.batchSizeInput.get())
             self.trainer.setMiniBatchSize(miniBatchSize)
         except:
-            self.__writeToLog('ERROR: Mini-batch size must be an integer.\n')
+            self.UIelements.writeToLog('ERROR: Mini-batch size must be an integer.\n')
             return
         if miniBatchSize > 60000:
-            self.__writeToLog('ERROR: Mini-batch size must be less than 60,000.\n')
+            self.UIelements.writeToLog('ERROR: Mini-batch size must be less than 60,000.\n')
             return
         
         try:
             inputSize = int(self.totalSizeInput.get())
             self.trainer.setInputSize(inputSize)
         except:
-            self.__writeToLog('ERROR: Total images to use must be an integer.\n')
+            self.UIelements.writeToLog('ERROR: Total images to use must be an integer.\n')
             return
         if inputSize > 60000:
-            self.__writeToLog('ERROR: Total images to use must be less than 60,000.\n')
+            self.UIelements.writeToLog('ERROR: Total images to use must be less than 60,000.\n')
             return
         if inputSize < miniBatchSize:
-            self.__writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
+            self.UIelements.writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
             return
         
         try:
             nEpochs = int(self.epochInput.get())
             self.trainer.setEpochs(nEpochs)
         except:
-            self.__writeToLog('ERROR: Number of training epochs must be an integer.\n')
+            self.UIelements.writeToLog('ERROR: Number of training epochs must be an integer.\n')
             return
         if not nEpochs > 0:
-            self.__writeToLog('ERROR: Number of training epochs must be greater than 0.\n')
+            self.UIelements.writeToLog('ERROR: Number of training epochs must be greater than 0.\n')
             return
         
         try:
             learningRate = float(self.learningRateInput.get())
             self.trainer.setLearningRate(learningRate)
         except:
-            self.__writeToLog('ERROR: Learning rate must be a real number.\n')
+            self.UIelements.writeToLog('ERROR: Learning rate must be a real number.\n')
             return
         if not learningRate > 0:
-            self.__writeToLog('ERROR: Learning rate must be positive.\n')
+            self.UIelements.writeToLog('ERROR: Learning rate must be positive.\n')
             return
         
         try:
             regularisationConst = float(self.regularisationConst.get())
             self.trainer.setRegularisationConst(regularisationConst)
         except:
-            self.__writeToLog('ERROR: Regularisation constant must be a real number.\n')
+            self.UIelements.writeToLog('ERROR: Regularisation constant must be a real number.\n')
             return
         if not regularisationConst >= 0:
-            self.__writeToLog('ERROR: Regularisation constant must be positive.\n')
+            self.UIelements.writeToLog('ERROR: Regularisation constant must be positive.\n')
             return
         
-        self.__writeToLog('Verifying back-propagation trainer...')
+        self.UIelements.writeToLog('Verifying back-propagation trainer...')
         if self.verboseLog.get():
-            self.__writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
-            self.__writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
-            self.__writeToLog('Total images to use is {:,}\n'.format(inputSize))
-            self.__writeToLog('Number of training epochs is {:,}\n'.format(nEpochs))
-            self.__writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nEpochs))
-            self.__writeToLog('Learning rate is {}\n'.format(learningRate))
-            self.__writeToLog('Regularisation constant is {}\n'.format(regularisationConst))
-            self.__writeToLog('Verifying back-propagation trainer...')
-        self.__writeToLog('done.\n\n')
+            self.UIelements.writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+            self.UIelements.writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
+            self.UIelements.writeToLog('Total images to use is {:,}\n'.format(inputSize))
+            self.UIelements.writeToLog('Number of training epochs is {:,}\n'.format(nEpochs))
+            self.UIelements.writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nEpochs))
+            self.UIelements.writeToLog('Learning rate is {}\n'.format(learningRate))
+            self.UIelements.writeToLog('Regularisation constant is {}\n'.format(regularisationConst))
+            self.UIelements.writeToLog('Verifying back-propagation trainer...')
+        self.UIelements.writeToLog('done.\n\n')
         
         return True
     
     def __loadMNISTdatabase(self):
         if not self.trainer.checkMNISTload():
-            self.__writeToLog('Loading MNIST training database to memory...')
-            self.__updateTrainingProgressBar(1)
+            self.UIelements.writeToLog('Loading MNIST training database to memory...')
+            self.UIelements.updateProgressBar(1)
             self.trainer.loadMNIST()
-            self.__writeToLog('done.\n\n')
-            self.__updateTrainingProgressBar(100)
+            self.UIelements.writeToLog('done.\n\n')
+            self.UIelements.updateProgressBar(100)
             time.sleep(0.2)
             self.trainingProgressBar['value'] = 0
         else:
-            self.__writeToLog('MNIST training database already loaded into memory.\n\n')
+            self.UIelements.writeToLog('MNIST training database already loaded into memory.\n\n')
     
     def __trainNetwork(self):
         self.__costHistory = []
-        self.__drawCostGraph()
+        self.__drawLossGraph()
         
         if not self.__checkUserInputForTrainer():
             return
@@ -289,24 +293,31 @@ class testingGUI:
             try:
                 np.random.seed(int(self.seedInput.get()))
             except:
-                self.__writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
+                self.UIelements.writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
                 np.random.seed()
         else:
             np.random.seed()
         
         startTime = time.time()
         
+        self.trainer.run(rootWindow=root, progressBarWidget=self.trainingProgressBar, messageLog=self.messageLog)
+        
+        self.UIelements.updateProgressBar(0)
+        self.UIelements.writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
+    
+    def junk(self):
+        self.junkDone = False
         for iteration in range(int(self.trainer.getEpochs())):
             np.random.shuffle(self.__trainingIndices)
             lastProgressUpdate = 0
-            self.__writeToLog('Executing training epoch {:n} of {:n}...'.format(iteration+1,self.trainer.getEpochs()))
+            self.UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(iteration+1,self.trainer.getEpochs()))
             for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
                 totalCost = 0
                 for trainingExample in range(self.trainer.getMiniBatchSize()):
                     currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
                     percentProgress = currentIndex / (int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())*self.trainer.getMiniBatchSize())
                     if percentProgress > lastProgressUpdate + 0.005:
-                        self.__updateTrainingProgressBar(percentProgress*100)
+                        self.UIelements.updateProgressBar(percentProgress*100)
                         lastProgressUpdate = percentProgress
                     trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[currentIndex], 'training')
                     exampleCost = self.trainer.cost(trainingImage.reshape(784), actualLabel)
@@ -314,14 +325,9 @@ class testingGUI:
                     # TODO some actual back propagation
                 
                 self.__costHistory.append(totalCost / self.trainer.getMiniBatchSize())
-            self.__drawCostGraph()
-            self.__writeToLog('done.\n')
-        self.__updateTrainingProgressBar(0)
-        self.__writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
-    
-    def __updateTrainingProgressBar(self, progress):
-        self.trainingProgressBar['value'] = progress
-        root.update()
+            self.__drawLossGraph()
+            self.UIelements.writeToLog('done.\n')
+        self.junkDone = True
     
     def __updateEvaluateProgressBar(self, progress):
         self.evaluateProgressBar['value'] = progress
@@ -329,32 +335,32 @@ class testingGUI:
     
     def __evaluateNetwork(self):
         if self.trainer.getNetwork().getStructure() == []:
-            self.__writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
+            self.UIelements.writeToLog('ERROR: No network to evaluate, intialise or load from file.\n')
             return
         
-        self.__writeToLog('Verifying network structure...')
+        self.UIelements.writeToLog('Verifying network structure...')
         if self.verboseLog.get():
-            self.__writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
+            self.UIelements.writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
 
         if self.trainer.getNetwork().getStructure()[0] != 784 or self.trainer.getNetwork().getStructure()[-1] != 10:
-            self.__writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
+            self.UIelements.writeToLog('ERROR: Network must have input size of 784 and output size of 10.\n')
             return
         
         if self.verboseLog.get():
-            self.__writeToLog('Verifying network structure...')
-        self.__writeToLog('done.\n\n')
+            self.UIelements.writeToLog('Verifying network structure...')
+        self.UIelements.writeToLog('done.\n\n')
 
         if not self.__mnistTestData:
-            self.__writeToLog('Loading MNIST testing database to memory...')
+            self.UIelements.writeToLog('Loading MNIST testing database to memory...')
             self.__mnistTestData = mnist.database(True)
-            self.__writeToLog('done.\n\n')
+            self.UIelements.writeToLog('done.\n\n')
         else:
-            self.__writeToLog('MNIST testing database already loaded into memory.\n\n')
+            self.UIelements.writeToLog('MNIST testing database already loaded into memory.\n\n')
         
         # self.__confusionMatrix = np.zeros((10,10))
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         
-        self.__writeToLog('Evaluating neural network against MNIST testing database...')
+        self.UIelements.writeToLog('Evaluating neural network against MNIST testing database...')
         
         network = self.trainer.getNetwork()
         for i in range(10000):
@@ -373,7 +379,7 @@ class testingGUI:
             totalCorrectPredictions += len(self.__confusionMatrix[i][i])
         networkAccuracy = totalCorrectPredictions / 10000
 
-        self.__writeToLog('done.\n\n')
+        self.UIelements.writeToLog('done.\n\n')
         self.__updateEvaluateProgressBar(0)
         
         self.performanceLabelContent.set('Overall network accuracy: {:.2%}'.format(networkAccuracy))
@@ -383,23 +389,6 @@ class testingGUI:
         self.__trainNetwork()
         self.__evaluateNetwork()
     
-    def __writeToLog(self, message):
-        self.messageLog.configure(state='normal')
-        if len(message)>7:
-            if message[0:5]=='ERROR':
-                self.messageLog.insert(tk.END, message[0:5], 'error')
-                self.messageLog.insert(tk.END, message[5:])
-            elif message[0:7]=='WARNING':
-                self.messageLog.insert(tk.END, message[0:7], 'warning')
-                self.messageLog.insert(tk.END, message[7:])
-            else:
-                self.messageLog.insert(tk.END, message)
-        else:
-            self.messageLog.insert(tk.END, message)
-        self.messageLog.configure(state='disabled')
-        self.messageLog.yview(tk.END)
-        root.update()
-        
     def __clearLog(self):
         self.messageLog.configure(state='normal')
         self.messageLog.delete(1.0, tk.END)
@@ -408,12 +397,12 @@ class testingGUI:
     def __initialiseNetwork(self):
         hiddenLayersStr = findall('[0-9]+', self.structureInput.get())
         if len(hiddenLayersStr) > 253:
-            self.__writeToLog('ERROR: Network has too many hidden layers (number of hidden layers must be less than 253).\n')
+            self.UIelements.writeToLog('ERROR: Network has too many hidden layers (number of hidden layers must be less than 253).\n')
             return
         structure = [28*28]
         for layerStr in hiddenLayersStr:
             if int(layerStr) > 65535:
-                self.__writeToLog('ERROR: Hidden layer size too large (neurons per layer must be less than 65,536).\n')
+                self.UIelements.writeToLog('ERROR: Hidden layer size too large (neurons per layer must be less than 65,536).\n')
                 return
             structure.append(int(layerStr))
         structure.append(10)
@@ -422,9 +411,9 @@ class testingGUI:
             try:
                 seed.append(int(self.seedInput.get()))
             except:
-                self.__writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
+                self.UIelements.writeToLog('WARNING: Random seed must be an integer, ignoring entered value.\n')
         self.trainer.initialiseNetwork(structure, seed)
-        self.__writeToLog('Initialised random network with structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] +'.\n')
+        self.UIelements.writeToLog('Initialised random network with structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] +'.\n')
     
     def __loadNetwork(self):
         file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
@@ -444,7 +433,7 @@ class testingGUI:
                 biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
                 network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
         self.trainer.setNetwork(network)
-        self.__writeToLog('Loaded network with structure: ' + str(network.getStructure())[1:-1] +'.\n')
+        self.UIelements.writeToLog('Loaded network with structure: ' + str(network.getStructure())[1:-1] +'.\n')
 
     def __randomiseCheck(self):
         if self.seedCheckVar.get() == 0:
