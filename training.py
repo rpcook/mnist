@@ -5,16 +5,19 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import scrolledtext
 from tkinter import messagebox
+
+import time
+import numpy as np
 from struct import pack
+from struct import unpack
+from re import findall
+
 import backpropagation as bp
 import neuralnetwork as nn
-from struct import unpack
-import numpy as np
-from re import findall
-import time
 import mnist
-from Tooltip import CanvasTooltip
 import userInteractivity as UI
+
+from Tooltip import CanvasTooltip
 
 class testingGUI:
     def __init__(self, master):
@@ -118,6 +121,7 @@ class testingGUI:
         self.__drawLossGraph()
         
     def __drawLossGraph(self):
+        # TODO: have this update handled in trainer.run()
         gc = self.graphingCanvas
         gc.delete('all')
         gc.create_text(15,75,angle=90,text='Loss')
@@ -304,30 +308,6 @@ class testingGUI:
         
         self.UIelements.updateProgressBar(0)
         self.UIelements.writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
-    
-    def junk(self):
-        self.junkDone = False
-        for iteration in range(int(self.trainer.getEpochs())):
-            np.random.shuffle(self.__trainingIndices)
-            lastProgressUpdate = 0
-            self.UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(iteration+1,self.trainer.getEpochs()))
-            for miniBatch in range(int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())):
-                totalCost = 0
-                for trainingExample in range(self.trainer.getMiniBatchSize()):
-                    currentIndex = miniBatch*self.trainer.getMiniBatchSize()+trainingExample
-                    percentProgress = currentIndex / (int(self.trainer.getInputSize()/self.trainer.getMiniBatchSize())*self.trainer.getMiniBatchSize())
-                    if percentProgress > lastProgressUpdate + 0.005:
-                        self.UIelements.updateProgressBar(percentProgress*100)
-                        lastProgressUpdate = percentProgress
-                    trainingImage, actualLabel = self.trainer.mnistData.getData(self.__trainingIndices[currentIndex], 'training')
-                    exampleCost = self.trainer.cost(trainingImage.reshape(784), actualLabel)
-                    totalCost += exampleCost
-                    # TODO some actual back propagation
-                
-                self.__costHistory.append(totalCost / self.trainer.getMiniBatchSize())
-            self.__drawLossGraph()
-            self.UIelements.writeToLog('done.\n')
-        self.junkDone = True
     
     def __updateEvaluateProgressBar(self, progress):
         self.evaluateProgressBar['value'] = progress
