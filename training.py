@@ -46,12 +46,14 @@ class trainingGUI:
         
         tk.Label(text='Total images to use:').grid(row=5, column=0)
         self.totalSizeInput = tk.Entry()
-        self.totalSizeInput.insert(0, '60000')
+        # self.totalSizeInput.insert(0, '60000')
+        # TODO: revert this line
+        self.totalSizeInput.insert(0, '6000')
         self.totalSizeInput.grid(row=5, column=1, sticky='W')
         
         tk.Label(text='Number of training epochs:').grid(row=6, column=0)
         self.epochInput = tk.Entry()
-        self.epochInput.insert(0, '1')
+        self.epochInput.insert(0, '3')
         self.epochInput.grid(row=6, column=1, sticky='W')
         
         tk.Label(text='Learning rate:').grid(row=7, column=0)
@@ -112,42 +114,15 @@ class trainingGUI:
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         self.__images = []
         self.__trainingIndices = list(range(60000))
-        self.__costHistory = []
+        # self.__costHistory = []
         self.UIelements = UI.elements({'rootWindow': root, \
                                        'progressBarWidget': self.trainingProgressBar, \
-                                       'messageLog': self.messageLog})
+                                       'messageLog': self.messageLog, \
+                                       'graphCanvas': self.graphingCanvas})
         
         self.__drawConfusionMatrix()
-        self.__drawLossGraph()
+        self.UIelements.drawGraphs([])
         
-    def __drawLossGraph(self):
-        # TODO: have this update handled in trainer.run()
-        gc = self.graphingCanvas
-        gc.delete('all')
-        gc.create_text(15,75,angle=90,text='Loss')
-        boldLine = '#aaaaaa'
-        softLine = '#dddddd'
-        costLine = '#0000ff'
-        if len(self.__costHistory) < 2:
-            numMajorGrids = 1
-        else:
-            numMajorGrids = int(np.ceil(np.log10(10/min(self.__costHistory))))
-        
-        gc.create_line(30,8,30,145)
-        for i in range(numMajorGrids+1):
-            gc.create_line(31, 8+i*(136/numMajorGrids), 500, 8+i*(136/numMajorGrids), fill=boldLine)
-        for i in range(numMajorGrids):
-            for j in range(2,10):
-                yPos = 8+(i+1-np.log10(j))*(136/numMajorGrids)
-                gc.create_line(31, yPos, 500, yPos, fill=softLine)
-                
-        if len(self.__costHistory) > 1:
-            for i in range(len(self.__costHistory)-1):
-                yPosStart = 8 + 136*((1 - np.log10(self.__costHistory[i])) / numMajorGrids)
-                yPosStop  = 8 + 136*((1 - np.log10(self.__costHistory[i+1])) / numMajorGrids)
-                gc.create_line(31+i*(470/(len(self.__costHistory)-1)), yPosStart, 31+(i+1)*(470/(len(self.__costHistory)-1)), yPosStop, fill=costLine)
-        root.update()
-    
     def __drawConfusionMatrix(self, drawNumbers=True):
         cm = self.__confusionMatrix
         cc = self.confusionCanvas
@@ -287,7 +262,7 @@ class trainingGUI:
     
     def __trainNetwork(self):
         self.__costHistory = []
-        self.__drawLossGraph()
+        self.UIelements.drawGraphs([])
         
         if not self.__checkUserInputForTrainer():
             return
@@ -304,7 +279,7 @@ class trainingGUI:
         
         startTime = time.time()
         
-        self.trainer.run(rootWindow=root, progressBarWidget=self.trainingProgressBar, messageLog=self.messageLog)
+        self.trainer.run(rootWindow=root, progressBarWidget=self.trainingProgressBar, messageLog=self.messageLog, graphCanvas=self.graphingCanvas)
         
         self.UIelements.updateProgressBar(0)
         self.UIelements.writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))

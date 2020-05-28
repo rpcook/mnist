@@ -29,11 +29,11 @@ class trainer:
         self.__UIelements = UI.elements(kwargs)
         trainingIndices = list(range(60000))
         costHistory = []
-        
-        for iteration in range(int(self.getEpochs())):
+        for epoch in range(int(self.getEpochs())):
+            print(np.random.randint(0,100))
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
-            self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(iteration+1,self.getEpochs()))
+            self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
             for miniBatch in range(int(self.getInputSize()/self.getMiniBatchSize())):
                 totalCost = 0
                 for trainingExample in range(self.getMiniBatchSize()):
@@ -48,9 +48,8 @@ class trainer:
                     # TODO some actual back propagation
                 
                 costHistory.append(totalCost / self.getMiniBatchSize())
-            # self.__drawLossGraph()
+            self.__UIelements.drawGraphs(costHistory)
             self.__UIelements.writeToLog('done.\n')
-
     
     def setNetwork(self, network):
         self.__network = network
