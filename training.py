@@ -19,7 +19,7 @@ import userInteractivity as UI
 
 from Tooltip import CanvasTooltip
 
-class testingGUI:
+class trainingGUI:
     def __init__(self, master):
         self.master = master
         master.title('MNIST Neural Network Training Interface')
@@ -440,5 +440,5 @@ class testingGUI:
                     f.write(pack('<f', network.getNeuronBias(i, j)))
 
 root = tk.Tk()
-g = testingGUI(root)
+g = trainingGUI(root)
 root.mainloop()
