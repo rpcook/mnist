@@ -121,7 +121,7 @@ class trainingGUI:
                                        'graphCanvas': self.graphingCanvas})
         
         self.__drawConfusionMatrix()
-        self.UIelements.drawGraphs([])
+        self.UIelements.drawGraphs([], [], [])
         
     def __drawConfusionMatrix(self, drawNumbers=True):
         cm = self.__confusionMatrix
@@ -262,7 +262,7 @@ class trainingGUI:
     
     def __trainNetwork(self):
         self.__costHistory = []
-        self.UIelements.drawGraphs([])
+        self.UIelements.drawGraphs([], [], [])
         
         if not self.__checkUserInputForTrainer():
             return

@@ -28,14 +28,16 @@ class trainer:
     def run(self, **kwargs):        
         self.__UIelements = UI.elements(kwargs)
         trainingIndices = list(range(60000))
-        costHistory = []
+        validationIndices = list(range(10000))
+        lossHistoryTrainer = []
+        lossHistoryValidation = []
+        errorHistory = []
         for epoch in range(int(self.getEpochs())):
-            print(np.random.randint(0,100))
+            self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
-            self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
+            totalCost = 0
             for miniBatch in range(int(self.getInputSize()/self.getMiniBatchSize())):
-                totalCost = 0
                 for trainingExample in range(self.getMiniBatchSize()):
                     currentIndex = miniBatch*self.getMiniBatchSize()+trainingExample
                     percentProgress = currentIndex / (int(self.getInputSize()/self.getMiniBatchSize())*self.getMiniBatchSize())
@@ -46,10 +48,29 @@ class trainer:
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
                     totalCost += exampleCost
                     # TODO some actual back propagation
+            lossHistoryTrainer.append(totalCost / self.getInputSize())
+            
+            np.random.shuffle(validationIndices)
+            totalCost = 0
+            totalErrors = 0
+            for validationIndex in range(max(int(self.getInputSize()/100), 500)):
+                validationImage, actualLabel = self.__mnistData.getData(validationIndices[validationIndex], 'test')
+                testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
+                totalCost += testImageCost
+                if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
+                    totalErrors += 1
                 
-                costHistory.append(totalCost / self.getMiniBatchSize())
-            self.__UIelements.drawGraphs(costHistory)
+            lossHistoryValidation.append(totalCost / max(int(self.getInputSize()/100), 500))
+            errorHistory.append(10 * totalErrors / max(int(self.getInputSize()/100), 500))
+            self.__UIelements.drawGraphs(lossHistoryTrainer, lossHistoryValidation, errorHistory)
             self.__UIelements.writeToLog('done.\n')
+    
+    def __exampleCost(self, inputLayer, desiredOutput):
+        self.__network.setNeuronActivation(0, range(self.__network.getStructure()[0]), inputLayer)
+        self.__network.evaluate()
+        target = np.zeros(self.__network.getStructure()[-1])
+        target[desiredOutput] = 1
+        return np.sum((self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))-target)**2)
     
     def setNetwork(self, network):
         self.__network = network
@@ -93,10 +114,3 @@ class trainer:
     def loadMNIST(self):
         self.__mnistData = mnist.database()
         self.__mnistLoaded = True
-    
-    def __exampleCost(self, inputLayer, desiredOutput):
-        self.__network.setNeuronActivation(0, range(self.__network.getStructure()[0]), inputLayer)
-        self.__network.evaluate()
-        target = np.zeros(self.__network.getStructure()[-1])
-        target[desiredOutput] = 1
-        return np.sum((self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))-target)**2)
