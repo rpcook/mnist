@@ -114,7 +114,6 @@ class trainingGUI:
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         self.__images = []
         self.__trainingIndices = list(range(60000))
-        # self.__costHistory = []
         self.UIelements = UI.elements({'rootWindow': root, \
                                        'progressBarWidget': self.trainingProgressBar, \
                                        'messageLog': self.messageLog, \
@@ -261,7 +260,6 @@ class trainingGUI:
             self.UIelements.writeToLog('MNIST training database already loaded into memory.\n\n')
     
     def __trainNetwork(self):
-        self.__costHistory = []
         self.UIelements.drawGraphs([], [], [])
         
         if not self.__checkUserInputForTrainer():
