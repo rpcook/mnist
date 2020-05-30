@@ -34,6 +34,8 @@ class trainer:
         errorHistory = []
         for epoch in range(int(self.getEpochs())):
             self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
+            
+            # Back propagation / training
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
             totalCost = 0
@@ -44,24 +46,41 @@ class trainer:
                     if percentProgress > lastProgressUpdate + 0.005:
                         self.__UIelements.updateProgressBar(percentProgress*100)
                         lastProgressUpdate = percentProgress
+                    # forward calculation
                     trainingImage, actualLabel = self.__mnistData.getData(trainingIndices[currentIndex], 'training')
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
                     totalCost += exampleCost
-                    # TODO some actual back propagation
+
+                    # back propagation of errors
+                    deltas = [np.array([0])]
+                    for layerSize in self.__network.getStructure()[1:]:
+                        deltas.append(np.zeros(layerSize))
+                    targetOutputActivations = np.zeros(self.__network.getStructure()[-1])
+                    targetOutputActivations[actualLabel] = 1
+                    outputActivations = self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))
+                    deltas[len(self.__network.getStructure())-1] = \
+                        (outputActivations - targetOutputActivations) * (outputActivations) * (1 - outputActivations)
+                    for layer in range(len(self.__network.getStructure())-1,0,-1):
+                        layerActivation = self.__network.getNeuronActivation(layer-1, range(self.__network.getStructure()[layer-1]))
+                        deltas[layer-1] = (np.transpose(self.__network.getConnectionWeights(layer-1)) @ deltas[layer]) * (layerActivation) * (1 - layerActivation)
+                    
+                    # gradient descent
+                    pass
             lossHistoryTrainer.append(totalCost / self.getInputSize())
             
+            # Validation (random subset of test set)
             np.random.shuffle(validationIndices)
             totalCost = 0
             totalErrors = 0
-            for validationIndex in range(max(int(self.getInputSize()/100), 500)):
+            for validationIndex in range(max(int(self.getInputSize()/60), 500)):
                 validationImage, actualLabel = self.__mnistData.getData(validationIndices[validationIndex], 'test')
                 testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
                 totalCost += testImageCost
                 if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
                     totalErrors += 1
-                
             lossHistoryValidation.append(totalCost / max(int(self.getInputSize()/100), 500))
             errorHistory.append(10 * totalErrors / max(int(self.getInputSize()/100), 500))
+            
             self.__UIelements.drawGraphs(lossHistoryTrainer, lossHistoryValidation, errorHistory)
             self.__UIelements.writeToLog('done.\n')
     
