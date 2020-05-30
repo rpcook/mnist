@@ -35,6 +35,13 @@ class trainer:
         for epoch in range(int(self.getEpochs())):
             self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
             
+            deltaSum = [np.array([0])]
+            for layerSize in self.__network.getStructure()[1:]:
+                deltaSum.append(np.zeros(layerSize))
+            grads = [np.array([0])]
+            for layer in range(len(self.__network.getStructure())-1):
+                grads.append(np.zeros((layer+1, layer)))
+                
             # Back propagation / training
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
@@ -46,6 +53,7 @@ class trainer:
                     if percentProgress > lastProgressUpdate + 0.005:
                         self.__UIelements.updateProgressBar(percentProgress*100)
                         lastProgressUpdate = percentProgress
+                    
                     # forward calculation
                     trainingImage, actualLabel = self.__mnistData.getData(trainingIndices[currentIndex], 'training')
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
@@ -64,8 +72,12 @@ class trainer:
                         layerActivation = self.__network.getNeuronActivation(layer-1, range(self.__network.getStructure()[layer-1]))
                         deltas[layer-1] = (np.transpose(self.__network.getConnectionWeights(layer-1)) @ deltas[layer]) * (layerActivation) * (1 - layerActivation)
                     
+                    # accumulators
+                    for layer in range(len(self.__network.getStructure())-1):
+                        deltaSum[layer+1] += deltas[layer+1]
+                        grads[layer+1] += grads[layer+1] # TODO: exterior product of activations and deltas per layer
+                    
                     # gradient descent
-                    pass
             lossHistoryTrainer.append(totalCost / self.getInputSize())
             
             # Validation (random subset of test set)
