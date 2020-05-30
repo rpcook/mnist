@@ -40,7 +40,15 @@ class elements:
             if len(lht) < 2:
                 numMajorGrids = 1
             else:
-                numMajorGrids = int(np.ceil(np.log10(10/min(*lht,*lhv,*errorHistory))))
+                if min(*errorHistory) == 0:
+                    errorHistoryNoZeros = []
+                    minimumElsewhere = min(*lht,*lhv)
+                    for entry in errorHistory:
+                        if entry > 0:
+                            errorHistoryNoZeros.append(entry)
+                        else:
+                            errorHistoryNoZeros.append(10**np.floor(np.log10(minimumElsewhere)))
+                numMajorGrids = int(np.ceil(np.log10(10/min(*lht,*lhv,*errorHistoryNoZeros))))
             
             gc.create_line(40,8,40,145)
             for i in range(numMajorGrids+1):
@@ -61,9 +69,9 @@ class elements:
                     yPosStart = 8 + 136*((1 - np.log10(lht[i])) / numMajorGrids)
                     yPosStop  = 8 + 136*((1 - np.log10(lht[i+1])) / numMajorGrids)
                     gc.create_line(41+i*(460/(len(lht)-1)), yPosStart, 41+(i+1)*(460/(len(lht)-1)), yPosStop, fill='blue')
-                    yPosStart = 8 + 136*((1 - np.log10(errorHistory[i])) / numMajorGrids)
-                    yPosStop  = 8 + 136*((1 - np.log10(errorHistory[i+1])) / numMajorGrids)
-                    gc.create_line(41+i*(460/(len(errorHistory)-1)), yPosStart, 41+(i+1)*(460/(len(errorHistory)-1)), yPosStop, fill='orange')
+                    yPosStart = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i])) / numMajorGrids)
+                    yPosStop  = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i+1])) / numMajorGrids)
+                    gc.create_line(41+i*(460/(len(errorHistoryNoZeros)-1)), yPosStart, 41+(i+1)*(460/(len(errorHistoryNoZeros)-1)), yPosStop, fill='orange')
             
             self.rootWindow.update()
 
