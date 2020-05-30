@@ -48,6 +48,8 @@ class elements:
                             errorHistoryNoZeros.append(entry)
                         else:
                             errorHistoryNoZeros.append(10**np.floor(np.log10(minimumElsewhere)))
+                else:
+                    errorHistoryNoZeros = errorHistory
                 numMajorGrids = int(np.ceil(np.log10(10/min(*lht,*lhv,*errorHistoryNoZeros))))
             
             gc.create_line(40,8,40,145)
