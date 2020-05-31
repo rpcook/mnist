@@ -38,10 +38,10 @@ class trainer:
             deltaSum = [np.array([0])]
             for layerSize in self.__network.getStructure()[1:]:
                 deltaSum.append(np.zeros(layerSize))
-            grads = [np.array([0])]
+            grads = []
             for layer in range(len(self.__network.getStructure())-1):
-                grads.append(np.zeros((layer+1, layer)))
-                
+                grads.append(np.zeros((self.__network.getStructure()[layer+1], self.__network.getStructure()[layer])))
+
             # Back propagation / training
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
@@ -66,8 +66,7 @@ class trainer:
                     targetOutputActivations = np.zeros(self.__network.getStructure()[-1])
                     targetOutputActivations[actualLabel] = 1
                     outputActivations = self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))
-                    deltas[len(self.__network.getStructure())-1] = \
-                        (outputActivations - targetOutputActivations) * (outputActivations) * (1 - outputActivations)
+                    deltas[len(self.__network.getStructure())-1] = (outputActivations - targetOutputActivations) * (outputActivations) * (1 - outputActivations)
                     for layer in range(len(self.__network.getStructure())-1,0,-1):
                         layerActivation = self.__network.getNeuronActivation(layer-1, range(self.__network.getStructure()[layer-1]))
                         deltas[layer-1] = (np.transpose(self.__network.getConnectionWeights(layer-1)) @ deltas[layer]) * (layerActivation) * (1 - layerActivation)
@@ -75,7 +74,7 @@ class trainer:
                     # accumulators
                     for layer in range(len(self.__network.getStructure())-1):
                         deltaSum[layer+1] += deltas[layer+1]
-                        grads[layer+1] += grads[layer+1] # TODO: exterior product of activations and deltas per layer
+                        grads[layer] += deltas[layer+1].reshape(len(deltas[layer+1]),1) * self.__network.getNeuronActivation(layer, range(self.__network.getStructure()[layer]))
                     
                     # gradient descent
             lossHistoryTrainer.append(totalCost / self.getInputSize())
