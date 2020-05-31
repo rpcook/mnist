@@ -44,7 +44,7 @@ class trainingGUI:
         self.batchSizeInput.insert(0, '100')
         self.batchSizeInput.grid(row=4, column=1, sticky='W')
         
-        tk.Label(text='Total images to use:').grid(row=5, column=0)
+        tk.Label(text='Images per epoch:').grid(row=5, column=0)
         self.totalSizeInput = tk.Entry()
         # self.totalSizeInput.insert(0, '60000')
         # TODO: revert this line
@@ -77,8 +77,8 @@ class trainingGUI:
               length = 200, mode = 'determinate')
         self.trainingProgressBar.grid(row=11, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0)
-        tk.Button(text='Save Network & Log').grid(row=12, column=1)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0, colspan=2)
+        # tk.Button(text='Save Network & Log').grid(row=12, column=1)
         
         self.verboseLog = tk.IntVar()
         self.verboseLog.set(1)
@@ -194,13 +194,13 @@ class trainingGUI:
             inputSize = int(self.totalSizeInput.get())
             self.trainer.setInputSize(inputSize)
         except:
-            self.UIelements.writeToLog('ERROR: Total images to use must be an integer.\n')
+            self.UIelements.writeToLog('ERROR: Images per epoch must be an integer.\n')
             return
         if inputSize > 60000:
-            self.UIelements.writeToLog('ERROR: Total images to use must be less than 60,000.\n')
+            self.UIelements.writeToLog('ERROR: Images per epoch must be less than 60,000.\n')
             return
         if inputSize < miniBatchSize:
-            self.UIelements.writeToLog('ERROR: Total images to use must be greater than mini-batch size.\n')
+            self.UIelements.writeToLog('ERROR: Images per epoch must be greater than mini-batch size.\n')
             return
         
         try:
@@ -237,7 +237,7 @@ class trainingGUI:
         if self.verboseLog.get():
             self.UIelements.writeToLog('\nNetwork structure: ' + str(self.trainer.getNetwork().getStructure())[1:-1] + '\n')
             self.UIelements.writeToLog('Mini-batch size is {:,}\n'.format(miniBatchSize))
-            self.UIelements.writeToLog('Total images to use is {:,}\n'.format(inputSize))
+            self.UIelements.writeToLog('Images per epoch is {:,}\n'.format(inputSize))
             self.UIelements.writeToLog('Number of training epochs is {:,}\n'.format(nEpochs))
             self.UIelements.writeToLog('Total evaluations of neural network will be {:,} operations\n'.format((inputSize-(inputSize%miniBatchSize))*nEpochs))
             self.UIelements.writeToLog('Learning rate is {}\n'.format(learningRate))
