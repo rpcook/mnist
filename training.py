@@ -48,7 +48,7 @@ class trainingGUI:
         self.totalSizeInput = tk.Entry()
         # self.totalSizeInput.insert(0, '60000')
         # TODO: revert this line
-        self.totalSizeInput.insert(0, '6000')
+        self.totalSizeInput.insert(0, '600')
         self.totalSizeInput.grid(row=5, column=1, sticky='W')
         
         tk.Label(text='Number of training epochs:').grid(row=6, column=0)
@@ -313,6 +313,7 @@ class trainingGUI:
         # self.__confusionMatrix = np.zeros((10,10))
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         
+        self.performanceLabelContent.set('Overall network accuracy: #')
         self.UIelements.writeToLog('Evaluating neural network against MNIST testing database...')
         
         network = self.trainer.getNetwork()
