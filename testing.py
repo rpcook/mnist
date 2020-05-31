@@ -213,9 +213,9 @@ class testingGUI:
     def __getConnectionWeightColour(self, layer, currentLayerNeuron, lastLayerNeuron):
         weight = self.network.getConnectionWeights(layer, currentLayerNeuron, lastLayerNeuron)
         maxBrightness = 1.0
-        brightness = min(int(round(255*weight/maxBrightness)),255)
-        hexValue = '%0.2X' % abs(brightness)
-        if weight > 0:
+        brightness = int(min(abs(255*weight/maxBrightness),255))
+        hexValue = '%0.2X' % brightness
+        if weight >= 0:
             return '#00'+hexValue+'00'
         else:
             return '#'+hexValue+'0000'
