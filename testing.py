@@ -72,7 +72,7 @@ class testingGUI:
             self.network.setStructure(neuronsPerLayer)
             for i in range(len(neuronsPerLayer)-1):
                 weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
-                self.network.setConnectionWeights(i+1, weights)
+                self.network.setConnectionWeights(i, weights)
                 biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
                 self.network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
         self.__drawNetwork()

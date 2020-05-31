@@ -75,7 +75,7 @@ class network:
         return self.__neuronBias[layer][neuron]
     
     def setConnectionWeights(self, layer, weights):
-        self.__neuronConnectionWeights[layer] = weights
+        self.__neuronConnectionWeights[layer+1] = weights
         
     def getConnectionWeights(self, layer, *ID):
         if len(ID)==2:
