@@ -22,7 +22,7 @@ class trainer:
         else:
             np.random.seed(seed[0])
         for i in range(len(structure)-1):
-            self.__network.setConnectionWeights(i+1, np.random.random((structure[i+1],structure[i]))*2-1)
+            self.__network.setConnectionWeights(i, np.random.random((structure[i+1],structure[i]))*2-1)
             self.__network.setNeuronBias(i+1, range(structure[i+1]), np.random.random(structure[i+1])*2-1)
     
     def run(self, **kwargs):        
@@ -46,10 +46,10 @@ class trainer:
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
             totalCost = 0
-            for miniBatch in range(int(self.getInputSize()/self.getMiniBatchSize())):
-                for trainingExample in range(self.getMiniBatchSize()):
-                    currentIndex = miniBatch*self.getMiniBatchSize()+trainingExample
-                    percentProgress = currentIndex / (int(self.getInputSize()/self.getMiniBatchSize())*self.getMiniBatchSize())
+            for miniBatch in range(int(self.__inputSize / self.__miniBatchSize)):
+                for trainingExample in range(self.__miniBatchSize):
+                    currentIndex = miniBatch * self.__miniBatchSize + trainingExample
+                    percentProgress = currentIndex / (int(self.__inputSize / self.__miniBatchSize) * self.__miniBatchSize)
                     if percentProgress > lastProgressUpdate + 0.005:
                         self.__UIelements.updateProgressBar(percentProgress*100)
                         lastProgressUpdate = percentProgress
@@ -77,20 +77,28 @@ class trainer:
                         grads[layer] += deltas[layer+1].reshape(len(deltas[layer+1]),1) * self.__network.getNeuronActivation(layer, range(self.__network.getStructure()[layer]))
                     
                     # gradient descent
-            lossHistoryTrainer.append(totalCost / self.getInputSize())
+                    for layer in range(len(self.__network.getStructure())-1):
+                        weights = self.__network.getConnectionWeights(layer)
+                        weights -= (self.__learningRate / self.__miniBatchSize) * grads[layer] + self.__regularisationConst * weights
+                        self.__network.setConnectionWeights(layer, weights)
+                        
+                        biases = self.__network.getNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]))
+                        biases -= (self.__learningRate / self.__miniBatchSize) * deltaSum[layer+1]
+                        self.__network.setNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]), biases)
+            lossHistoryTrainer.append(totalCost / self.__inputSize)
             
             # Validation (random subset of test set)
             np.random.shuffle(validationIndices)
             totalCost = 0
             totalErrors = 0
-            for validationIndex in range(max(int(self.getInputSize()/60), 500)):
+            for validationIndex in range(max(int(self.__inputSize/60), 500)):
                 validationImage, actualLabel = self.__mnistData.getData(validationIndices[validationIndex], 'test')
                 testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
                 totalCost += testImageCost
                 if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
                     totalErrors += 1
-            lossHistoryValidation.append(totalCost / max(int(self.getInputSize()/100), 500))
-            errorHistory.append(10 * totalErrors / max(int(self.getInputSize()/100), 500))
+            lossHistoryValidation.append(totalCost / max(int(self.__inputSize/100), 500))
+            errorHistory.append(10 * totalErrors / max(int(self.__inputSize/100), 500))
             
             self.__UIelements.drawGraphs(lossHistoryTrainer, lossHistoryValidation, errorHistory)
             self.__UIelements.writeToLog('done.\n')
