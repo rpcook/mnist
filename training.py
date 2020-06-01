@@ -77,7 +77,7 @@ class trainingGUI:
               length = 200, mode = 'determinate')
         self.trainingProgressBar.grid(row=11, column=0, columnspan=2, sticky='EW')
         
-        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0, colspan=2)
+        tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0, columnspan=2)
         # tk.Button(text='Save Network & Log').grid(row=12, column=1)
         
         self.verboseLog = tk.IntVar()
@@ -399,6 +399,8 @@ class trainingGUI:
         file = filedialog.asksaveasfile(filetypes=(('nn files', '\*.nn'),))
         if file is None:
             return
+        if not '.' in file.name:
+            file.name.append('.nn')
         self.__saveNetwork(self.trainer.getNetwork(), file.name)
     
     def __saveNetwork(self, network, fileName):
