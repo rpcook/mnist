@@ -232,7 +232,7 @@ class testingGUI:
         totalActivation = 0
         for row in range(28):
             for col in range(28):
-                pixelFill = self.pixelCanvas.itemcget('x%0.2d' % col + 'y%0.2d' % row, 'fill')
+                pixelFill = self.pixelCanvas.itemcget('x%0.2d' % row + 'y%0.2d' % col, 'fill')
                 if len(pixelFill)==0:
                     activation = 0
                 else:
