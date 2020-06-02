@@ -279,8 +279,27 @@ class trainingGUI:
         
         self.trainer.run(rootWindow=root, progressBarWidget=self.trainingProgressBar, messageLog=self.messageLog, graphCanvas=self.graphingCanvas)
         
+        trainingDurationTotalSeconds = time.time()-startTime
+        trainingDurationString = ''
+        trainingDurationDays = int(trainingDurationTotalSeconds / (60*60*24))
+        if trainingDurationDays > 0:
+            if trainingDurationDays == 1:
+                daysPlural = 's'
+            trainingDurationString += '{} day'.format(trainingDurationDays) + daysPlural + ', '
+        trainingDurationHours = int((trainingDurationTotalSeconds - trainingDurationDays * (60*60*24)) / (60*60))
+        if trainingDurationHours > 0 or trainingDurationString != '':
+            if trainingDurationHours == 1:
+                hoursPlural = 's'
+            trainingDurationString += '{} hour'.format(trainingDurationHours) + hoursPlural + ', '
+        trainingDurationMinutes = int((trainingDurationTotalSeconds - trainingDurationHours * (60*60) - trainingDurationDays * (60*60*24)) / (60))
+        if trainingDurationMinutes > 0 or trainingDurationString != '':
+            if trainingDurationMinutes == 1:
+                minutesPlural = 's'
+            trainingDurationString += '{} minute'.format(trainingDurationMinutes) + minutesPlural + ', '
+        trainingDurationSeconds = trainingDurationTotalSeconds % 60
+        trainingDurationString += '{:.1f} seconds.\n\n'.format(trainingDurationSeconds)
+        self.UIelements.writeToLog('\nTraining complete.\nDuration ' + trainingDurationString)
         self.UIelements.updateProgressBar(0)
-        self.UIelements.writeToLog('\nTraining complete. Duration {:.1f}s.\n\n'.format(time.time()-startTime))
     
     def __updateEvaluateProgressBar(self, progress):
         self.evaluateProgressBar['value'] = progress
