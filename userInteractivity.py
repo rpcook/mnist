@@ -64,7 +64,7 @@ class elements:
                 return
             
             if len(lht) > 1:
-                for i in range(len(lht)-1):
+                for i in range(0, len(lht)-1, int(np.ceil(len(lht)/600))):
                     yPosStart = 8 + 136*((1 - np.log10(lhv[i])) / numMajorGrids)
                     yPosStop  = 8 + 136*((1 - np.log10(lhv[i+1])) / numMajorGrids)
                     gc.create_line(41+i*(460/(len(lhv)-1)), yPosStart, 41+(i+1)*(460/(len(lhv)-1)), yPosStop, fill='green')
