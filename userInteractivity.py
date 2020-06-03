@@ -64,16 +64,29 @@ class elements:
                 return
             
             if len(lht) > 1:
-                for i in range(0, len(lht)-1, int(np.ceil(len(lht)/600))):
+                maxPoints = 600
+                interval = int(np.ceil(len(lht)/maxPoints))
+                for i in range(0, len(lht)-interval, interval):
+                    yPosStart = 8 + 136*((1 - np.log10(lhv[i])) / numMajorGrids)
+                    yPosStop  = 8 + 136*((1 - np.log10(lhv[i+interval])) / numMajorGrids)
+                    gc.create_line(41+i*(460/(len(lhv)-1)), yPosStart, 41+(i+interval)*(460/(len(lhv)-1)), yPosStop, fill='green')
+                    yPosStart = 8 + 136*((1 - np.log10(lht[i])) / numMajorGrids)
+                    yPosStop  = 8 + 136*((1 - np.log10(lht[i+interval])) / numMajorGrids)
+                    gc.create_line(41+i*(460/(len(lht)-1)), yPosStart, 41+(i+interval)*(460/(len(lht)-1)), yPosStop, fill='blue')
+                    yPosStart = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i])) / numMajorGrids)
+                    yPosStop  = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i+interval])) / numMajorGrids)
+                    gc.create_line(41+i*(460/(len(errorHistoryNoZeros)-1)), yPosStart, 41+(i+interval)*(460/(len(errorHistoryNoZeros)-1)), yPosStop, fill='orange')
+                if i > maxPoints:
+                    i = len(lht) - 2
                     yPosStart = 8 + 136*((1 - np.log10(lhv[i])) / numMajorGrids)
                     yPosStop  = 8 + 136*((1 - np.log10(lhv[i+1])) / numMajorGrids)
-                    gc.create_line(41+i*(460/(len(lhv)-1)), yPosStart, 41+(i+1)*(460/(len(lhv)-1)), yPosStop, fill='green')
+                    gc.create_line(41+(i-interval+2)*(460/(len(lhv)-1)), yPosStart, 41+(i+1)*(460/(len(lhv)-1)), yPosStop, fill='green')
                     yPosStart = 8 + 136*((1 - np.log10(lht[i])) / numMajorGrids)
                     yPosStop  = 8 + 136*((1 - np.log10(lht[i+1])) / numMajorGrids)
-                    gc.create_line(41+i*(460/(len(lht)-1)), yPosStart, 41+(i+1)*(460/(len(lht)-1)), yPosStop, fill='blue')
+                    gc.create_line(41+(i-interval+2)*(460/(len(lht)-1)), yPosStart, 41+(i+1)*(460/(len(lht)-1)), yPosStop, fill='blue')
                     yPosStart = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i])) / numMajorGrids)
                     yPosStop  = 8 + 136*((1 - np.log10(errorHistoryNoZeros[i+1])) / numMajorGrids)
-                    gc.create_line(41+i*(460/(len(errorHistoryNoZeros)-1)), yPosStart, 41+(i+1)*(460/(len(errorHistoryNoZeros)-1)), yPosStop, fill='orange')
+                    gc.create_line(41+(i-interval+2)*(460/(len(errorHistoryNoZeros)-1)), yPosStart, 41+(i+1)*(460/(len(errorHistoryNoZeros)-1)), yPosStop, fill='orange')
             
             self.rootWindow.update()
 
