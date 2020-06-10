@@ -185,8 +185,8 @@ class testingGUI:
                         self.pixelCanvas.create_rectangle(
                             (a%28)*pxSz+2,
                             ((a-a%28)/28)*pxSz+2,
-                            (a%28+0.5)*pxSz+1,
-                            ((a-a%28)/28+0.5)*pxSz+1,
+                            (a%28+0.65)*pxSz+1,
+                            ((a-a%28)/28+0.65)*pxSz+1,
                             fill=self.__getConnectionWeightColour(layer-1, neuron, a),
                             outline='#FFFFFF',
                             tags='highlight')
