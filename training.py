@@ -5,12 +5,13 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import scrolledtext
 from tkinter import messagebox
+from tkinter import simpledialog
 
 import time
 import numpy as np
-from struct import pack
 from struct import unpack
 from re import findall
+from os import remove
 
 import backpropagation as bp
 import neuralnetwork as nn
@@ -70,15 +71,14 @@ class trainingGUI:
         tk.Button(text='Configure Grid Search', state='disabled').grid(row=9, column=0)
         tk.Button(text='Run Grid Search', state='disabled').grid(row=9, column=1)
         
-        tk.Button(text='Train Network', command=self.__trainNetwork).grid(row=10, column=0)
-        tk.Button(text='Train Network & Evaluate Performance', command=self.__trainAndEvaluateNetwork).grid(row=10, column=1)
+        tk.Button(text='Train Network', command=self.__trainNetworkButtonHandler).grid(row=10, column=0)
+        tk.Button(text='Train Network, Saving Progress', command=self.__trainSavingProgress).grid(row=10, column=1)
         
         self.trainingProgressBar = ttk.Progressbar(orient = tk.HORIZONTAL, 
               length = 200, mode = 'determinate')
         self.trainingProgressBar.grid(row=11, column=0, columnspan=2, sticky='EW')
         
         tk.Button(text='Save Network', command=self.__saveButtonHandler).grid(row=12, column=0, columnspan=2)
-        # tk.Button(text='Save Network & Log').grid(row=12, column=1)
         
         self.verboseLog = tk.IntVar()
         self.verboseLog.set(1)
@@ -258,12 +258,15 @@ class trainingGUI:
             self.trainingProgressBar['value'] = 0
         else:
             self.UIelements.writeToLog('MNIST training database already loaded into memory.\n\n')
-    
-    def __trainNetwork(self):
-        self.UIelements.drawGraphs([], [], [])
-        
+
+    def __trainNetworkButtonHandler(self):
         if not self.__checkUserInputForTrainer():
             return
+        self.__trainNetwork()
+    
+    def __trainNetwork(self, *saveIntervalsInfo):
+        self.UIelements.drawGraphs([], [], [])
+        
         self.__loadMNISTdatabase()
         
         if self.seedCheckVar.get() == 0:
@@ -277,7 +280,18 @@ class trainingGUI:
         
         startTime = time.time()
         
-        self.trainer.run(rootWindow=root, progressBarWidget=self.trainingProgressBar, messageLog=self.messageLog, graphCanvas=self.graphingCanvas)
+        if len(saveIntervalsInfo)==0:
+            self.trainer.run(rootWindow=root, \
+                             progressBarWidget=self.trainingProgressBar, \
+                             messageLog=self.messageLog, \
+                             graphCanvas=self.graphingCanvas)
+        elif len(saveIntervalsInfo)==2:
+            self.trainer.run(rootWindow=root, \
+                             progressBarWidget=self.trainingProgressBar, \
+                             messageLog=self.messageLog, \
+                             graphCanvas=self.graphingCanvas, \
+                             saveIntervals=saveIntervalsInfo[0], \
+                             saveFileRoot=saveIntervalsInfo[1])
         
         trainingDurationTotalSeconds = time.time()-startTime
         trainingDurationString = ''
@@ -303,6 +317,8 @@ class trainingGUI:
         trainingDurationString += '{:.1f} seconds.\n\n'.format(trainingDurationSeconds)
         self.UIelements.writeToLog('\nTraining complete.\nDuration ' + trainingDurationString)
         self.UIelements.updateProgressBar(0)
+        
+        self.__evaluateNetwork()
     
     def __updateEvaluateProgressBar(self, progress):
         self.evaluateProgressBar['value'] = progress
@@ -332,7 +348,6 @@ class trainingGUI:
         else:
             self.UIelements.writeToLog('MNIST testing database already loaded into memory.\n\n')
         
-        # self.__confusionMatrix = np.zeros((10,10))
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         
         self.performanceLabelContent.set('Overall network accuracy: #')
@@ -361,9 +376,29 @@ class trainingGUI:
         self.performanceLabelContent.set('Overall network accuracy: {:.2%}'.format(networkAccuracy))
         self.__drawConfusionMatrix()
     
-    def __trainAndEvaluateNetwork(self):
-        self.__trainNetwork()
-        self.__evaluateNetwork()
+    def __trainSavingProgress(self):
+        intervalsString = simpledialog.askstring('Progress Intervals', 'Save network after which training epochs? (csv list)', parent=root)
+        if intervalsString is None:
+            return
+        intervalsList = findall('[0-9]+', intervalsString)
+        if len(intervalsList)==0:
+            return
+        intervals = []
+        for i in intervalsList:
+            intervals.append(int(i))
+        if not self.__checkUserInputForTrainer():
+            return
+        if max(intervals) > self.trainer.getEpochs():
+            messagebox.showerror('Error', 'Save intervals must all be less than number of Epochs.')
+            return
+
+        file = filedialog.asksaveasfile(filetypes=(('nn files', '\*.nn'),))
+        if file is None:
+            return
+        file.close()
+        remove(file.name)
+        
+        self.__trainNetwork(intervals, file.name)
     
     def __clearLog(self):
         self.messageLog.configure(state='normal')
@@ -421,22 +456,11 @@ class trainingGUI:
         file = filedialog.asksaveasfile(filetypes=(('nn files', '\*.nn'),))
         if file is None:
             return
-        if not '.' in file.name:
-            file.name.append('.nn')
-        self.__saveNetwork(self.trainer.getNetwork(), file.name)
+        file.close()
+        remove(file.name)
+        UI.saveNetwork(self.trainer.getNetwork(), file.name)
+        self.UIelements.writeToLog('Saved network to file.\n')
     
-    def __saveNetwork(self, network, fileName):
-        with open(fileName, 'wb') as f:
-            f.write(pack('B', len(network.getStructure())))
-            for layerSize in network.getStructure():
-                f.write(pack('<H', layerSize))
-            for i in range(len(network.getStructure())-1):
-                for j in range(network.getStructure()[i+1]):
-                    for k in range(network.getStructure()[i]):
-                        f.write(pack('<f', network.getConnectionWeights(i, j, k)))
-                for j in range(network.getStructure()[i+1]):
-                    f.write(pack('<f', network.getNeuronBias(i, j)))
-
 root = tk.Tk()
 g = trainingGUI(root)
 root.mainloop()
