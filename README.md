@@ -35,7 +35,7 @@ Binary data, little endian
 | float | 4 | bias for neuron 1 in layer 1 |
 | ... | ... | ... |
 | float | 4 | bias for last neuron in layer 1 |
-| float | 4\*x | above structure (weights, then biases) follows for each subsquent layer |
+| float | 4\*x | above structure (weights, then biases) follows for each subsequent layer |
 
 ## Inspiration / References
 - 3Blue1Brown's excellent series on [Neural Networks](https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi) (my original motivation to start this project)
