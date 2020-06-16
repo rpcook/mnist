@@ -42,24 +42,22 @@ class trainingGUI:
         
         tk.Label(text='Mini-batch size:').grid(row=4, column=0)
         self.batchSizeInput = tk.Entry()
-        self.batchSizeInput.insert(0, '100')
+        self.batchSizeInput.insert(0, '500')
         self.batchSizeInput.grid(row=4, column=1, sticky='W')
         
         tk.Label(text='Images per epoch:').grid(row=5, column=0)
         self.totalSizeInput = tk.Entry()
-        # self.totalSizeInput.insert(0, '60000')
-        # TODO: revert this line
-        self.totalSizeInput.insert(0, '600')
+        self.totalSizeInput.insert(0, '10000')
         self.totalSizeInput.grid(row=5, column=1, sticky='W')
         
         tk.Label(text='Number of training epochs:').grid(row=6, column=0)
         self.epochInput = tk.Entry()
-        self.epochInput.insert(0, '3')
+        self.epochInput.insert(0, '500')
         self.epochInput.grid(row=6, column=1, sticky='W')
         
         tk.Label(text='Learning rate:').grid(row=7, column=0)
         self.learningRateInput = tk.Entry()
-        self.learningRateInput.insert(0, '0.1')
+        self.learningRateInput.insert(0, '0.0002')
         self.learningRateInput.grid(row=7, column=1, sticky='W')
         
         tk.Label(text='Regularisation constant:').grid(row=8,column=0)
