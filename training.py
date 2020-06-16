@@ -111,6 +111,7 @@ class trainingGUI:
         
         self.trainer = bp.trainer()
         self.__mnistTestData = False
+        self.__mnistTrainingLoaded = False
         self.__confusionMatrix = [[[] for i in range(10)] for j in range(10)]
         self.__images = []
         self.__trainingIndices = list(range(60000))
@@ -248,10 +249,15 @@ class trainingGUI:
         return True
     
     def __loadMNISTdatabase(self):
-        if not self.trainer.checkMNISTload():
+        if not self.__mnistTrainingLoaded:
             self.UIelements.writeToLog('Loading MNIST training database to memory...')
             self.UIelements.updateProgressBar(1)
-            self.trainer.loadMNIST()
+            mnistDatabase = mnist.database()
+            trainingImages, trainingLabels = mnistDatabase.getData(range(60000), 'training')
+            self.trainer.setTrainingSet(trainingImages, trainingLabels)
+            validationImages, validationLabels = mnistDatabase.getData(range(10000), 'test')
+            self.trainer.setValidationSet(validationImages, validationLabels)
+            self.__mnistTrainingLoaded = True
             self.UIelements.writeToLog('done.\n\n')
             self.UIelements.updateProgressBar(100)
             time.sleep(0.2)

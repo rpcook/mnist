@@ -2,13 +2,15 @@
 
 import numpy as np
 import neuralnetwork as nn
-import mnist
+# import mnist
 import userInteractivity as UI
 
 class trainer:
     def __init__(self):
         self.__network = nn.network()
-        self.__mnistLoaded = False
+        # self.__mnistLoaded = False
+        self.__trainingLoaded = False
+        self.__validationLoaded = False
         self.__miniBatchSize = []
         self.__inputSize = []
         self.__learningRate = []
@@ -25,10 +27,14 @@ class trainer:
             self.__network.setConnectionWeights(i, np.random.random((structure[i+1],structure[i]))*2-1)
             self.__network.setNeuronBias(i+1, range(structure[i+1]), np.random.random(structure[i+1])*2-1)
     
-    def run(self, **kwargs):        
+    def run(self, **kwargs):
+        if not self.__trainingLoaded:
+            raise NameError('Training data not loaded!')
+        if not self.__validationLoaded:
+            raise NameError('Validation data not loaded!')
         self.__UIelements = UI.elements(kwargs)
-        trainingIndices = list(range(60000))
-        validationIndices = list(range(10000))
+        trainingIndices = list(range(len(self.__trainingSetLabels)))
+        validationIndices = list(range(len(self.__validationSetLabels)))
         lossHistoryTrainer = []
         lossHistoryValidation = []
         errorHistory = []
@@ -55,7 +61,7 @@ class trainer:
                         lastProgressUpdate = percentProgress
                     
                     # forward calculation
-                    trainingImage, actualLabel = self.__mnistData.getData(trainingIndices[currentIndex], 'training')
+                    trainingImage, actualLabel = self.__getTrainingExample(currentIndex)
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
                     totalCost += exampleCost
 
@@ -92,7 +98,7 @@ class trainer:
             totalCost = 0
             totalErrors = 0
             for validationIndex in range(max(int(self.__inputSize/60), 500)):
-                validationImage, actualLabel = self.__mnistData.getData(validationIndices[validationIndex], 'test')
+                validationImage, actualLabel = self.__getValidationExample(validationIndex)
                 testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
                 totalCost += testImageCost
                 if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
@@ -119,6 +125,26 @@ class trainer:
         target = np.zeros(self.__network.getStructure()[-1])
         target[desiredOutput] = 1
         return np.sum((self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))-target)**2)
+    
+    def setTrainingSet(self, trainingSetImages, trainingSetLabels):
+        self.__trainingSetImages = trainingSetImages
+        self.__trainingSetLabels = trainingSetLabels
+        self.__trainingLoaded = True
+        
+    def __getTrainingExample(self, indices):
+        images = self.__trainingSetImages[indices]
+        labels = self.__trainingSetLabels[indices]
+        return images, labels
+    
+    def setValidationSet(self, validationSetImages, validationSetLabels):
+        self.__validationSetImages = validationSetImages
+        self.__validationSetLabels = validationSetLabels
+        self.__validationLoaded = True
+        
+    def __getValidationExample(self, indices):
+        images = self.__trainingSetImages[indices]
+        labels = self.__trainingSetLabels[indices]
+        return images, labels
     
     def setNetwork(self, network):
         self.__network = network
@@ -155,10 +181,3 @@ class trainer:
     
     def getRegularisationConst(self):
         return self.__regularisationConst
-    
-    def checkMNISTload(self):
-        return self.__mnistLoaded
-    
-    def loadMNIST(self):
-        self.__mnistData = mnist.database()
-        self.__mnistLoaded = True
