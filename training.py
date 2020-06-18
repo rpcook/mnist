@@ -9,7 +9,6 @@ from tkinter import simpledialog
 
 import time
 import numpy as np
-from struct import unpack
 from re import findall
 from os import remove
 
@@ -434,21 +433,19 @@ class trainingGUI:
         file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
         if file is None:
             return
-        with open(file.name, 'rb') as f:
-            nLayers = unpack('B', f.read(1))[0]
-            neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
-            if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
-                messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
-                return
-            network = nn.network()
-            network.setStructure(neuronsPerLayer)
-            for i in range(len(neuronsPerLayer)-1):
-                weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
-                network.setConnectionWeights(i, weights)
-                biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
-                network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
+        
+        network = nn.loadNetwork(file.name)
+        if network is None:
+            messagebox.showerror('Error', 'Error processing file')
+            return
+        
+        structure = network.getStructure()
+        if structure[0] != 784 or structure[-1] != 10:
+            messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
+            return
+
         self.trainer.setNetwork(network)
-        self.UIelements.writeToLog('Loaded network with structure: ' + str(network.getStructure())[1:-1] +'.\n')
+        self.UIelements.writeToLog('Loaded network with structure: ' + str(network.getStructure())[1:-1] +' from file \"' + file.name[file.name.rfind('/')+1:] + '\".\n')
 
     def __randomiseCheck(self):
         if self.seedCheckVar.get() == 0:
@@ -462,8 +459,8 @@ class trainingGUI:
             return
         file.close()
         remove(file.name)
-        UI.saveNetwork(self.trainer.getNetwork(), file.name)
-        self.UIelements.writeToLog('Saved network to file.\n')
+        nn.saveNetwork(self.trainer.getNetwork(), file.name)
+        self.UIelements.writeToLog('Saved network to file \"' + file.name[file.name.rfind('/')+1:] + '\".\n')
     
 root = tk.Tk()
 g = trainingGUI(root)

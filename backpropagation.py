@@ -117,7 +117,7 @@ class trainer:
                 indexLength = int(np.ceil(np.log10(max(kwargs['saveIntervals'])+1)))
                 if epoch+1 in kwargs['saveIntervals']:
                     saveFile = fileRoot + '{:0{}d}.nn'.format(epoch+1, indexLength)
-                    UI.saveNetwork(self.__network, saveFile)
+                    nn.saveNetwork(self.__network, saveFile)
     
     def __exampleCost(self, inputLayer, desiredOutput):
         self.__network.setNeuronActivation(0, range(self.__network.getStructure()[0]), inputLayer)

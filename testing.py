@@ -3,11 +3,9 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-import math
+from math import sqrt
 import mnist
 import neuralnetwork as nn
-from struct import unpack
-import numpy as np
 
 mnistTestData = mnist.database(loadTestOnly=True)
 
@@ -62,20 +60,19 @@ class testingGUI:
         file = filedialog.askopenfile(title='Select neural network', filetypes=(('neural network files','*.nn'),))
         if file is None:
             return
-        with open(file.name, 'rb') as f:
-            nLayers = unpack('B', f.read(1))[0]
-            neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
-            if neuronsPerLayer[0] != 784 or neuronsPerLayer[3] != 10:
-                messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
-                return
-            self.network = nn.network()
-            self.network.setStructure(neuronsPerLayer)
-            for i in range(len(neuronsPerLayer)-1):
-                weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
-                self.network.setConnectionWeights(i, weights)
-                biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
-                self.network.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
-        self.__drawNetwork()
+        
+        newNetwork = nn.loadNetwork(file.name)
+        if newNetwork is None:
+            messagebox.showerror('Error', 'Error processing file')
+            return
+
+        structure = newNetwork.getStructure()
+        if structure[0] != 784 or structure[-1] != 10:
+            messagebox.showerror('Error', 'Neural network has wrong number\nof input (784) or output (10) nodes')
+            return
+        else:
+            self.network = newNetwork
+            self.__drawNetwork()
         
     def __drawNetwork(self):
         self.nnCanvas.delete('all')
@@ -288,7 +285,7 @@ class testingGUI:
                 coords = self.drawingCanvas.coords(closestPointSpecifier[0])
                 centreX = (coords[0] + coords[2]) / 2
                 centreY = (coords[1] + coords[3]) / 2
-                distance = math.sqrt((centreX-pxX)**2+(centreY-pxY)**2)
+                distance = sqrt((centreX-pxX)**2+(centreY-pxY)**2)
                 distanceN = distance / pxSz
                 brightness = (150/(max(max(distanceN,0.5)-0.5,0.1))**2)-50
                 brightnessN = max(min(brightness,255),0)
