@@ -1,14 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
-def sigmoid(x):
-    # logistic function
-    return (1 / (1 + np.exp(-x)))
-
-def dsigmoid(x):
-    # first derivative of logistic function
-    return sigmoid(x)*sigmoid(-x)
+from struct import pack, unpack
 
 class network:
     def __init__(self):
@@ -18,11 +11,15 @@ class network:
         self.__neuronConnectionWeights = []
         self.__networkComplete = False
         
+    def __sigmoid(self, x):
+        # logistic function
+        return (1 / (1 + np.exp(-x)))
+    
     def evaluate(self):
         try:
             for layerIndex in range(len(self.__neuronsPerLayer)-1):
                 z=self.__neuronConnectionWeights[layerIndex+1] @ self.__neuronActivation[layerIndex] + self.__neuronBias[layerIndex+1]
-                self.__neuronActivation[layerIndex+1] = sigmoid(z)
+                self.__neuronActivation[layerIndex+1] = self.__sigmoid(z)
             return True
         except:
             return False
@@ -82,3 +79,33 @@ class network:
             return self.__neuronConnectionWeights[layer+1][ID[0]][ID[1]]
         else:
             return self.__neuronConnectionWeights[layer+1]
+
+def saveNetwork(networkToSave, fileName):
+    if not fileName.endswith('.nn'):
+        fileName += '.nn'
+    with open(fileName, 'wb') as f:
+        f.write(pack('B', len(networkToSave.getStructure())))
+        for layerSize in networkToSave.getStructure():
+            f.write(pack('<H', layerSize))
+        for i in range(len(networkToSave.getStructure())-1):
+            for j in range(networkToSave.getStructure()[i+1]):
+                for k in range(networkToSave.getStructure()[i]):
+                    f.write(pack('<f', networkToSave.getConnectionWeights(i, j, k)))
+            for j in range(networkToSave.getStructure()[i+1]):
+                f.write(pack('<f', networkToSave.getNeuronBias(i, j)))
+                
+def loadNetwork(fileName):
+    try:
+        with open(fileName, 'rb') as f:
+            nLayers = unpack('B', f.read(1))[0]
+            neuronsPerLayer = unpack('{}H'.format(nLayers), f.read(2*nLayers))
+            loadedNetwork = network()
+            loadedNetwork.setStructure(neuronsPerLayer)
+            for i in range(len(neuronsPerLayer)-1):
+                weights = np.array(unpack('<{}f'.format(neuronsPerLayer[i]*neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i]*neuronsPerLayer[i+1]))).reshape((neuronsPerLayer[i+1],neuronsPerLayer[i]))
+                loadedNetwork.setConnectionWeights(i, weights)
+                biases = np.array(unpack('<{}f'.format(neuronsPerLayer[i+1]), f.read(4*neuronsPerLayer[i+1])))
+                loadedNetwork.setNeuronBias(i+1, range(neuronsPerLayer[i+1]), biases)
+        return loadedNetwork
+    except:
+        return

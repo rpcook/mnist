@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
 import numpy as np
-from struct import pack
 
 class elements:
     def __init__(self, kwargs):
@@ -113,17 +112,3 @@ class elements:
         if self.progressBarAvailable:
             self.progressBarWidget['value'] = progress   
             self.rootWindow.update()
-
-def saveNetwork(network, fileName):
-    if not fileName.endswith('.nn'):
-        fileName += '.nn'
-    with open(fileName, 'wb') as f:
-        f.write(pack('B', len(network.getStructure())))
-        for layerSize in network.getStructure():
-            f.write(pack('<H', layerSize))
-        for i in range(len(network.getStructure())-1):
-            for j in range(network.getStructure()[i+1]):
-                for k in range(network.getStructure()[i]):
-                    f.write(pack('<f', network.getConnectionWeights(i, j, k)))
-            for j in range(network.getStructure()[i+1]):
-                f.write(pack('<f', network.getNeuronBias(i, j)))
