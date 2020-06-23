@@ -2,13 +2,11 @@
 
 import numpy as np
 import neuralnetwork as nn
-# import mnist
 import userInteractivity as UI
 
 class trainer:
     def __init__(self):
         self.__network = nn.network()
-        # self.__mnistLoaded = False
         self.__trainingLoaded = False
         self.__validationLoaded = False
         self.__miniBatchSize = []
