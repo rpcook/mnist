@@ -49,7 +49,7 @@ class trainer:
             # Back propagation / training
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
-            totalCost = 0
+            totalTrainingCost = 0
             for miniBatch in range(int(self.__inputSize / self.__miniBatchSize)):
                 for trainingExample in range(self.__miniBatchSize):
                     currentIndex = miniBatch * self.__miniBatchSize + trainingExample
@@ -61,7 +61,7 @@ class trainer:
                     # forward calculation
                     trainingImage, actualLabel = self.__getTrainingExample(currentIndex)
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
-                    totalCost += exampleCost
+                    totalTrainingCost += exampleCost
 
                     # back propagation of errors
                     deltas = [np.array([0])]
@@ -89,20 +89,21 @@ class trainer:
                         biases = self.__network.getNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]))
                         biases -= (self.__learningRate / self.__miniBatchSize) * deltaSum[layer+1]
                         self.__network.setNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]), biases)
-            lossHistoryTrainer.append(totalCost / self.__inputSize)
+            lossHistoryTrainer.append(totalTrainingCost / self.__inputSize)
             
             # Validation (random subset of test set)
             np.random.shuffle(validationIndices)
-            totalCost = 0
+            totalValidationCost = 0
             totalErrors = 0
-            for validationIndex in range(max(int(self.__inputSize/60), 500)):
+            validationSetSize = max(int(self.__inputSize/60), 500)
+            for validationIndex in range(validationSetSize):
                 validationImage, actualLabel = self.__getValidationExample(validationIndex)
                 testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
-                totalCost += testImageCost
+                totalValidationCost += testImageCost
                 if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
                     totalErrors += 1
-            lossHistoryValidation.append(totalCost / max(int(self.__inputSize/100), 500))
-            errorHistory.append(10 * totalErrors / max(int(self.__inputSize/100), 500))
+            lossHistoryValidation.append(totalValidationCost / validationSetSize)
+            errorHistory.append(10 * totalErrors / validationSetSize)
             
             self.__UIelements.drawGraphs(lossHistoryTrainer, lossHistoryValidation, errorHistory)
             self.__UIelements.writeToLog('done.\n')
