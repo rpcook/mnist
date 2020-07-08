@@ -92,7 +92,7 @@ def saveNetwork(networkToSave, fileName):
                 for k in range(networkToSave.getStructure()[i]):
                     f.write(pack('<f', networkToSave.getConnectionWeights(i, j, k)))
             for j in range(networkToSave.getStructure()[i+1]):
-                f.write(pack('<f', networkToSave.getNeuronBias(i, j)))
+                f.write(pack('<f', networkToSave.getNeuronBias(i+1, j)))
                 
 def loadNetwork(fileName):
     try:
