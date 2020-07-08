@@ -460,7 +460,10 @@ class trainingGUI:
         file.close()
         remove(file.name)
         nn.saveNetwork(self.trainer.getNetwork(), file.name)
-        self.UIelements.writeToLog('Saved network to file \"' + file.name[file.name.rfind('/')+1:] + '\".\n')
+        displayFileName = file.name[file.name.rfind('/')+1:]
+        if not displayFileName[-3:] == '.nn':
+            displayFileName += '.nn'
+        self.UIelements.writeToLog('Saved network to file \"' + displayFileName + '\".\n')
     
 root = tk.Tk()
 g = trainingGUI(root)
