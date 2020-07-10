@@ -59,7 +59,7 @@ class trainer:
                         lastProgressUpdate = percentProgress
                     
                     # forward calculation
-                    trainingImage, actualLabel = self.__getTrainingExample(currentIndex)
+                    trainingImage, actualLabel = self.__getTrainingExample(trainingIndices[currentIndex])
                     exampleCost = self.__exampleCost(trainingImage.reshape(784), actualLabel)
                     totalTrainingCost += exampleCost
 
@@ -97,7 +97,7 @@ class trainer:
             totalErrors = 0
             validationSetSize = max(int(self.__inputSize/60), 500)
             for validationIndex in range(validationSetSize):
-                validationImage, actualLabel = self.__getValidationExample(validationIndex)
+                validationImage, actualLabel = self.__getValidationExample(validationIndices[validationIndex])
                 testImageCost = self.__exampleCost(validationImage.reshape(784), actualLabel)
                 totalValidationCost += testImageCost
                 if actualLabel != np.argmax(self.__network.getNeuronActivation(len(self.__network.getStructure())-1, range(self.__network.getStructure()[-1]))):
