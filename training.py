@@ -61,7 +61,7 @@ class trainingGUI:
         
         tk.Label(text='Regularisation constant:').grid(row=8,column=0)
         self.regularisationConst = tk.Entry()
-        self.regularisationConst.insert(0, '0.0')
+        self.regularisationConst.insert(0, '0.000001')
         self.regularisationConst.grid(row=8, column=1, sticky='W')
         
         # TODO: add functionality to these
