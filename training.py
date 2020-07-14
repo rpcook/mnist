@@ -51,7 +51,7 @@ class trainingGUI:
         
         tk.Label(text='Number of training epochs:').grid(row=6, column=0)
         self.epochInput = tk.Entry()
-        self.epochInput.insert(0, '500')
+        self.epochInput.insert(0, '150')
         self.epochInput.grid(row=6, column=1, sticky='W')
         
         tk.Label(text='Learning rate:').grid(row=7, column=0)
