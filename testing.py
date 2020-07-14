@@ -31,27 +31,29 @@ class testingGUI:
         
         # pixel canvas area
         self.pixelCanvas = tk.Canvas(width=pxSize*28, height=pxSize*28, bg='#440000')
-        self.pixelCanvas.grid(row=0, column=1)
+        self.pixelCanvas.grid(row=0, column=1, columnspan=2)
         
-        self.testIndex = tk.Spinbox(from_=0, to=9999, command=self.__loadMNIST)
-        self.testIndex.grid(row=1,column=1)
+        tk.Label(text='MNIST test index: ').grid(row=1, column=1, sticky='E')
+        
+        self.testIndex = tk.Spinbox(from_=0, to=9999, command=self.__loadMNIST, width=10)
+        self.testIndex.grid(row=1,column=2,sticky='W')
         self.testIndex.bind('<Return>', self.__loadMNIST)
         
         self.mnistLabelVar = tk.StringVar()
         self.mnistLabelVar.set('Label: #')
         self.mnistLabel = tk.Label(textvariable=self.mnistLabelVar)
-        self.mnistLabel.grid(row=2,column=1)
+        self.mnistLabel.grid(row=2,column=1,columnspan=2)
         
         # neural network area
         self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
-        self.nnProcessButton.grid(row=2, column=2)
+        self.nnProcessButton.grid(row=2, column=3)
         
         self.nnCanvas = tk.Canvas(width=pxSize*43, height=pxSize*28)
-        self.nnCanvas.grid(row=0,column=2)
+        self.nnCanvas.grid(row=0,column=3)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
         
         self.loadNNbutton = tk.Button(text='Load Neural Network', command=self.__loadNetwork)
-        self.loadNNbutton.grid(row=1,column=2)
+        self.loadNNbutton.grid(row=1,column=3)
         
         self.network = nn.network()
         self.truthResult = 'drawn'
