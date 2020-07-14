@@ -45,9 +45,6 @@ class testingGUI:
         self.mnistLabel.grid(row=2,column=1,columnspan=2)
         
         # neural network area
-        self.nnProcessButton = tk.Button(text='GO!', command=self.__processNetwork)
-        self.nnProcessButton.grid(row=2, column=3)
-        
         self.nnCanvas = tk.Canvas(width=pxSize*43, height=pxSize*28)
         self.nnCanvas.grid(row=0,column=3)
         self.nnCanvas.bind('<Button-1>', self.__highlightNode)
