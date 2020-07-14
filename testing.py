@@ -200,7 +200,7 @@ class testingGUI:
     def __getNeuronBiasColour(self, layer, neuron):
         bias = self.network.getNeuronBias(layer, neuron)
         maxBrightness = 1.0
-        brightness = min(int(round(255*bias/maxBrightness)),255)
+        brightness = min(abs(int(round(255*bias/maxBrightness))),255)
         hexValue = '%0.2X' % abs(brightness)
         if bias > 0:
             return '#00'+hexValue+'00'
