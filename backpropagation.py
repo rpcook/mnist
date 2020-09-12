@@ -39,18 +39,18 @@ class trainer:
         for epoch in range(int(self.getEpochs())):
             self.__UIelements.writeToLog('Executing training epoch {:n} of {:n}...'.format(epoch+1,self.getEpochs()))
             
-            deltaSum = [np.array([0])]
-            for layerSize in self.__network.getStructure()[1:]:
-                deltaSum.append(np.zeros(layerSize))
-            grads = []
-            for layer in range(len(self.__network.getStructure())-1):
-                grads.append(np.zeros((self.__network.getStructure()[layer+1], self.__network.getStructure()[layer])))
-
             # Back propagation / training
             np.random.shuffle(trainingIndices)
             lastProgressUpdate = 0
             totalTrainingCost = 0
             for miniBatch in range(int(self.__inputSize / self.__miniBatchSize)):
+                deltaSum = [np.array([0])]
+                for layerSize in self.__network.getStructure()[1:]:
+                    deltaSum.append(np.zeros(layerSize))
+                grads = []
+                for layer in range(len(self.__network.getStructure())-1):
+                    grads.append(np.zeros((self.__network.getStructure()[layer+1], self.__network.getStructure()[layer])))
+
                 for trainingExample in range(self.__miniBatchSize):
                     currentIndex = miniBatch * self.__miniBatchSize + trainingExample
                     percentProgress = currentIndex / (int(self.__inputSize / self.__miniBatchSize) * self.__miniBatchSize)
@@ -80,15 +80,16 @@ class trainer:
                         deltaSum[layer+1] += deltas[layer+1]
                         grads[layer] += deltas[layer+1].reshape(len(deltas[layer+1]),1) * self.__network.getNeuronActivation(layer, range(self.__network.getStructure()[layer]))
                     
-                    # gradient descent
-                    for layer in range(len(self.__network.getStructure())-1):
-                        weights = self.__network.getConnectionWeights(layer)
-                        weights -= (self.__learningRate / self.__miniBatchSize) * grads[layer] + self.__regularisationConst * weights
-                        self.__network.setConnectionWeights(layer, weights)
-                        
-                        biases = self.__network.getNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]))
-                        biases -= (self.__learningRate / self.__miniBatchSize) * deltaSum[layer+1]
-                        self.__network.setNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]), biases)
+                # gradient descent
+                for layer in range(len(self.__network.getStructure())-1):
+                    weights = self.__network.getConnectionWeights(layer)
+                    weights -= (self.__learningRate / self.__miniBatchSize) * grads[layer] + self.__regularisationConst * weights
+                    self.__network.setConnectionWeights(layer, weights)
+                    
+                    biases = self.__network.getNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]))
+                    biases -= (self.__learningRate / self.__miniBatchSize) * deltaSum[layer+1]
+                    self.__network.setNeuronBias(layer+1, range(self.__network.getStructure()[layer+1]), biases)
+
             lossHistoryTrainer.append(totalTrainingCost / self.__inputSize)
             
             # Validation (random subset of test set)
