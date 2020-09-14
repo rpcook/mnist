@@ -41,7 +41,7 @@ class trainingGUI:
         
         tk.Label(text='Mini-batch size:').grid(row=4, column=0)
         self.batchSizeInput = tk.Entry()
-        self.batchSizeInput.insert(0, '500')
+        self.batchSizeInput.insert(0, '50')
         self.batchSizeInput.grid(row=4, column=1, sticky='W')
         
         tk.Label(text='Images per epoch:').grid(row=5, column=0)
@@ -56,12 +56,12 @@ class trainingGUI:
         
         tk.Label(text='Learning rate:').grid(row=7, column=0)
         self.learningRateInput = tk.Entry()
-        self.learningRateInput.insert(0, '0.0002')
+        self.learningRateInput.insert(0, '0.1')
         self.learningRateInput.grid(row=7, column=1, sticky='W')
         
         tk.Label(text='Regularisation constant:').grid(row=8,column=0)
         self.regularisationConst = tk.Entry()
-        self.regularisationConst.insert(0, '0.0000001')
+        self.regularisationConst.insert(0, '0')
         self.regularisationConst.grid(row=8, column=1, sticky='W')
         
         # TODO: add functionality to these
